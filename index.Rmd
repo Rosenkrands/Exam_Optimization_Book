@@ -1,0 +1,15 @@
+--- 
+title: "Exam Optimization"
+author: "Kasper Rosenkrands"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::pdf_book
+---
+
+\newpage
+
+# Introduction
+
+This is a collection of the possible exam subject at the optimization exam of the 2019 fall semester at Aalborg University.
+
+\newpage
