@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1578420698762.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2295447096",
+    "id" : "B9B3D235",
+    "lastKnownWriteTime" : 1578421362,
+    "last_content_update" : 1578421362754,
+    "path" : "C:/Users/krose/Desktop/GitHub Repos/Exam_Optimization_Book/01-line_search.Rmd",
+    "project_path" : "01-line_search.Rmd",
+    "properties" : {
+        "cursorPosition" : "6,8",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

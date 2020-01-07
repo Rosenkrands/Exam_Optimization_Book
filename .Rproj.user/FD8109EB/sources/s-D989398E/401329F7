@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1578420683994.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "401329F7",
+    "lastKnownWriteTime" : 1578419775,
+    "last_content_update" : 1578419775,
+    "path" : "C:/Users/krose/Desktop/GitHub Repos/Exam_Optimization_Book/02-calculating_derivs.Rmd",
+    "project_path" : "02-calculating_derivs.Rmd",
+    "properties" : {
+        "cursorPosition" : "2,8",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
