@@ -1,9 +1,12 @@
 --- 
 title: "Exam Optimization"
 author: "Kasper Rosenkrands"
-date: "`r Sys.Date()`"
+date: "Fall 2019"
+toc: true
 site: bookdown::bookdown_site
 output: bookdown::pdf_book
+include-before: 
+  '`\newpage`{=latex}'
 ---
 
 \newpage

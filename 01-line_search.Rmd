@@ -1,8 +1,25 @@
 # Line search
+Throughout this exercise we will utilize the `cars` dataset and we will refer to speed by $s$ and distance by $d$.
 
 ## Exercise 1: Gradient descent
+We want to fit a straight line of the form $m(s) = a + b \cdot s$ to the data. We want to determine $a$ and $b$. One way is to minimise the objective function given by
+\begin{align}
+f(a, b) = \frac{1}{n} \sum_{i = 1}^n f_i(a, b),
+\end{align}
+where
+\begin{align}
+f_i(a, b) = (m(s_i) - d_i)^2 .
+\end{align}
 
 ### What is the gradient of $f$?
+We find the gradient by differentiating the function given by the following, first w.r.t. $a$ and then $b$
+\begin{align}
+  f(a,b) &= \frac{1}{n} \sum_{i=1}^n \left( m(s_i) - d_i \right)^2
+\end{align}
+The gradient becomes
+\begin{align}
+  \nabla f(a,b) = \left[ \frac{2}{n} \sum_{i = 1}^n m(s_i) - d_i, \quad \frac{2}{n} \sum_{i = 1}^n (m(s_i) - d_i)s_i \right]
+\end{align}
 
 ### Implement gradient descent and then use it to find the best straight line
 
