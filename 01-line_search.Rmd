@@ -18,7 +18,7 @@ We find the gradient by differentiating the function given by the following, fir
 \end{align}
 The gradient becomes
 \begin{align}
-  \nabla f(a,b) = \left[ \frac{2}{n} \sum_{i = 1}^n m(s_i) - d_i, \quad \frac{2}{n} \sum_{i = 1}^n (m(s_i) - d_i)s_i \right]
+  \nabla f(a,b) = \left[ \frac{2}{n} \sum_{i = 1}^n m(s_i) - d_i, \quad \frac{2}{n} \sum_{i = 1}^n (m(s_i) - d_i)s_i \right].
 \end{align}
 
 ### Implement gradient descent and then use it to find the best straight line
