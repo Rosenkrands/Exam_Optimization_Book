@@ -36,9 +36,10 @@ Next we start to implement a basic gradient descent algorithm.
 # Usign the norm as a criteria for convergence
 norm2 <- function(x) norm(as.matrix(x), type = "2")
 
-basic_gd <- function(x_0 = c(-19,3.6), alpha = 1e-4, tolerance = 1e-4,
-                     k_max = 100000) {
+basic_gd <- function(output = FALSE, x_0 = c(-19,3.6), alpha = 1e-4, tolerance = 1e-4,
+                     k_max = 10000) {
   x_k <- x_0
+  f_iterates <- rep(0, k_max)
   keep_going <- TRUE
   k <- 0
   while(keep_going) {
@@ -47,13 +48,17 @@ basic_gd <- function(x_0 = c(-19,3.6), alpha = 1e-4, tolerance = 1e-4,
     p_k <- -g_k
     x_k <- x_k + alpha * p_k
     keep_going <- ((norm2(g_k) >= tolerance) & (k < k_max))
+    f_iterates[k] <- f(x_k)
   }
   if((norm2(g_k) <= tolerance)) {
     cat('Converged in', k, 'steps', '\n')
   } else {
     cat('Iteration limit reached', '\n')
   }
-  cat('f(x_k) = ',f(x_k),'\t', 'x_k = ', x_k)
+  cat('f(x_k) = ',f(x_k),'\t','x_k = ',x_k)
+  if(output == TRUE) {
+    return(f_iterates)
+  }
 }
 basic_gd()
 ```
@@ -170,46 +175,69 @@ We can then create a function that uses the line search and zoom algortihm to ac
 ```{r}
 strong_wolfe_gd <-
   function(f, g, x_0, a_0 = 1, r_k = 0.5,
-           c1 = 1e-4, c2 = 4e-1, tol_grad_f = 1e-4, k_max = 10000) {
+           c1 = 1e-4, c2 = 4e-1, tol_grad_f = 1e-4,
+           k_max = 100000, output = FALSE, plot = FALSE) {
+  f_iterates <- rep(0,k_max)
   keep_going <- TRUE
 
-  # For plotting purposes
-  agrid <- seq(-22,-15,.1)
-  bgrid <- seq(3.5,4.5,.1)
-  zvalues <- matrix(NA_real_,length(agrid),length(bgrid))
-  for (i in 1:length(agrid)) {
-    for (j in 1:length(bgrid)) {
-      zvalues[i,j] <- f(c(agrid[i],bgrid[j]))
+  if (plot) {
+    agrid <- seq(-22,-15,.1)
+    bgrid <- seq(3.5,4.5,.1)
+    zvalues <- matrix(NA_real_,length(agrid),length(bgrid))
+    for (i in 1:length(agrid)) {
+      for (j in 1:length(bgrid)) {
+        zvalues[i,j] <- f(c(agrid[i],bgrid[j]))
+      }
     }
+    my_levels <- seq(150, 400, 10)
+    contour(agrid, bgrid, zvalues, levels = my_levels)
+    points(x_0[1], x_0[2])
   }
-  my_levels <- seq(150, 400, 10)
-  contour(agrid, bgrid, zvalues, levels = my_levels)
-  points(x_0[1], x_0[2])
 
   x_k <- x_0
   k <- 0
   while (keep_going) {
+    f_iterates[k+1] <- f(x_k) 
     k <- k + 1
     a_k <- alpha(a_0, x_k, c1, c2, r_k)
     g_k <- g(x_k)
     p_k <- -g_k
     x_k <- x_k + a_k*p_k
     keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
-
+    
     #plot iterates
-    if (k == 1 || k %% 100 == 0) {
-      points(x_k[1], x_k[2])
+    if (plot) {
+      if (k == 1 || k %% 100 == 0) {
+        points(x_k[1], x_k[2])
+      }
     }
   }
-  if((norm2(g_k) <= tol_grad_f)) {
-    cat('Converged in', k, 'steps', '\n')
-  } else {
-    cat('Iteration limit reached', '\n')
+  if (!output) {
+    if((norm2(g_k) <= tol_grad_f)) {
+      cat('Converged in', k, 'steps', '\n')
+    } else {
+      cat('Iteration limit reached', '\n')
+    }
+    cat('f(x_k) = ',f(x_k),'\t', 'x_k = ', x_k)
   }
-  cat('f(x_k) = ',f(x_k),'\t', 'x_k = ', x_k)
+  if (output == TRUE) {
+    return(f_iterates)
+  }
 }
-strong_wolfe_gd(f,g, c(-19, 3.6))
+strong_wolfe_gd(f,g, c(-19, 3.6), output = FALSE, plot = TRUE)
 ```
+
+```{r, include = F}
+plot.data <- cbind('Fixed-step' = basic_gd(output = TRUE), 'Strong-Wolfe' = strong_wolfe_gd(output = TRUE, f, g, c(-19,3.6)), 'Iteration' = seq(1,100000,1))
+library(tidyverse)
+plot.data.long <- gather(data.frame(plot.data), key = 'Type', value = 'f', -Iteration)
+plot.data.long <- filter(plot.data.long, Iteration < 50)
+```
+
+```{r echo=F, fig.height=2, fig.width=8}
+ggplot(plot.data.long) + geom_point(aes(x = Iteration, y = f, color = Type)) + theme_minimal()
+```
+
 
 <!-- Throughout this exercise we will utilize the `cars` dataset and we will refer to speed by $s$ and distance by $d$. -->
 
