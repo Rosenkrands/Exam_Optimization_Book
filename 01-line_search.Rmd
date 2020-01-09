@@ -22,24 +22,312 @@ The gradient becomes
 \end{align}
 
 ### Implement gradient descent and then use it to find the best straight line
+first we must import some data to work with.
+We will use the cars dataset from base R.
+```{r}
+s <- cars$speed; d <- cars$dist
+data_length <- length(s)
+```
+Then we define our objective function.
+Furthermore we will provide the gradient.
+```{r}
+f <- function(x) 1/data_length * sum(((x[1] + x[2] * s) - d)^2)
+g <- function(x) {
+  gradient.a <- 2/data_length * sum((x[1] + x[2] * s) - d)
+  gradient.b <- 2/data_length * sum(s * ((x[1] + x[2] * s) - d))
+  return(c(gradient.a, gradient.b))
+}
+```
+Next we start to implement a basic gradient descent algorithm.
+```{r}
+norm2 <- function(x) norm(as.matrix(x), type = "2")
+x_0 <- c(1,1)
+x_k <- x_0
+alpha <- 1e-4
+tolerance <- 1e-4
+k_max <- 10000
+keep_going <- TRUE
+k <- 0
+while(keep_going) {
+  k <- k + 1
+  g_k <- g(x_k)
+  p_k <- -g_k
+  x_k <- x_k + alpha * p_k
+  keep_going <- ((norm2(g_k) >= tolerance) & (k < k_max))
+}
+if((norm2(g_k) <= tolerance)) {
+  cat('Converged in', k, 'steps', '\n')
+} else {
+  cat('Iteration limit reached', '\n')
+}
+f(x_k)
+```
 
 #### What is meant by *the best* straight line in relation to the objective function above
+By the best straight line is meant the line that minimizes the sum of squared residuals.
 
 #### Discuss different ways to determine the step sizes
+There are multiple different ways to choose step sizes.
+Firstly note the we could choose a constant and multiply this by the gradient to decide the step.
+This is the simplest way but there is no guarentee that we will find a critical point, therefore we might have to experiment with different constants until we find something that works.
+This is what we have done above.
+A little more advanced method is known as sufficient decrease or backtracking.
+The thought here is that we start with a step size and look and the value of the objective function in that point.
+If the value of the objective function is lower than the current value we accept the step.
+However if the value is not lower, we scale the step length by $0<\rho<1$.
+We then do this scaling until we have "sufficient decrease" so to speak.
+Going even further is to implement what is called the strong wolfe conditions, these are a set of special conditions that ensure global convergence to a critical point.
+Below is an implementation of a gradient descent algorithm using the strong wolfe conditions.
+It consists of a line search algorithm which finds step length that satisfies the strong wolfe conditions, furthermore it utilizes another algorithm called zoom.
 
 ### Try with different ways to choose step sizes and illustrate it (including plotting the objective function and the iterates, $\{x_k\}_k$)
+Below is an implementation of a gradient descent algorithm using the strong wolfe conditions.
+It consists of a line search algorithm which finds step length that satisfies the strong wolfe conditions, furthermore it utilizes another algorithm called zoom.
+```{r}
+norm2 <- function(x) norm(as.matrix(x), type = "2")
+
+# Implementation of Algorithm 3.5
+# (Line Search Algorithm)
+alpha <- function(a_0, x_k, c1, c2, r_k) {
+  a_max <- 4*a_0
+  f_k <- f(x_k)
+  phi_k <- f_k
+  a_1 <- a_0
+  a0 <- 0
+  a_k <- a_1
+  a_k_old <- a0
+  k <- 0
+  k_max <- 10000   
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    f_k <- f(x_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    phi_k_old <- f(x_k + a_k_old * p_k)
+      phi_k <- f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <- f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || ((k > 1) && (phi_k >= phi_k_old))) {
+        return(zoom(a_k_old, a_k, x_k, c1, c2))
+      }
+    dphi_k <- t(g(x_k + a_k * p_k)) %*% p_k
+      if (abs(dphi_k) <= -c2*dphi_k_0) {
+        return(a_k)
+      }
+    if (dphi_k >= 0) {
+      return(zoom(a_k, a_k_old, x_k, c1, c2))
+    }
+    a_k_old <- a_k
+    a_k <- r_k*a_k + (1 - r_k)*a_max
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+# Implementation of Algorithm ...
+# (Zoom Algorithm)
+zoom <- function(a_lo, a_hi, x_k, c1, c2) {
+  f_k <- f(x_k)
+  g_k <- g(x_k)
+  p_k <- -g_k
+  k <- 0
+  k_max <- 10000   # Maximum number of iterations.
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    phi_lo <- f(x_k + a_lo * p_k)
+      a_k <- 0.5*(a_lo + a_hi)
+      phi_k <-  f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <-  f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || (phi_k >= phi_lo)) {
+        a_hi <- a_k
+      } else {
+        dphi_k <-  t(g(x_k + a_k * p_k)) %*% p_k
+          if (abs(dphi_k) <= -c2*dphi_k_0) {
+            return(a_k)
+          }
+        if (dphi_k*(a_hi - a_lo) >= 0) {
+          a_hi <- a_lo
+        }
+        a_lo <- a_k
+      }
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+```
+For these two algorithms to work we first need to provide and objective function $f$ as well as the gradient for this function.
+```{r}
+s <- cars$speed; d <- cars$dist
+data_length <- length(s)
+
+f <- function(x) 1/data_length * sum(((x[1] + x[2] * s) - d)^2)
+g <- function(x) {
+  gradient.a <- 2/data_length * sum((x[1] + x[2] * s) - d)
+  gradient.b <- 2/data_length * sum(s * ((x[1] + x[2] * s) - d))
+  return(c(gradient.a, gradient.b))
+}
+```
+We can then create a function that uses the line search and zoom algortihm to actually minimize the objective function.
+```{r}
+strong_wolfe_gd <- 
+  function(f, g, x_0, a_0 = 1, r_k = 0.5, 
+           c1 = 1e-4, c2 = 4e-1, tol_grad_f = 5e-4, k_max = 10000) {
+  keep_going <- TRUE
+  
+  # For plotting purposes
+  agrid <- seq(-22,-15,.1)
+  bgrid <- seq(3.5,4.5,.1)
+  zvalues <- matrix(NA_real_,length(agrid),length(bgrid))
+  for (i in 1:length(agrid)) {
+    for (j in 1:length(bgrid)) {
+      zvalues[i,j] <- f(c(agrid[i],bgrid[j]))
+    }
+  }
+  my_levels <- seq(150, 400, 10)
+  contour(agrid, bgrid, zvalues, levels = my_levels)
+  points(x_0[1], x_0[2])
+  
+  x_k <- x_0
+  k <- 0
+  while (keep_going) {
+    k <- k + 1
+    a_k <- alpha(a_0, x_k, c1, c2, r_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    x_k <- x_k + a_k*p_k
+    keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
+    
+    #plot iterates
+    points(x_k[1], x_k[2])
+  }
+  cat('x_k =', x_k, '\t', 'f(x_k) =', f(x_k), '\t', 'k =', k, '\n')
+}
+strong_wolfe_gd(f,g, c(-19, 3.6))
+```
 
 ### Show some iterates in a plot showing the data (e.g. `plot(dist ~ speed, cars)`)
+With the basic gradient descent function the iterates is shown in the following plot where we have plotted the regression line for the first, tenth, fiftieth and the for every 20.000 steps.
+```{r, echo = FALSE}
+norm2 <- function(x) norm(as.matrix(x), type = "2")
+k_max <- 100000
+plot(s,d)
+x_0 <- c(1,1)
+x_k <- x_0
+step_alpha <- 1e-4
+tolerance <- 1e-4
+keep_going <- TRUE
+k <- 0
+while(keep_going) {
+  k <- k + 1
+  g_k <- g(x_k)
+  p_k <- -g_k
+  x_k <- x_k + step_alpha * p_k
+  keep_going <- ((norm2(g_k) >= tolerance) & (k < k_max))
+  if (k == 1 || k == 10 || k == 50 || k %% 20000 == 0) {
+    abline(x_k[1], x_k[2])
+  }
+}
+```
 
 ## Exercise 2: Stochastic gradient descent / incremental gradient descent
 
 ### What is the difference between stochastic gradient descent and gradient descent?
+In both g.d. and stoc. g.d. we update a set of parameters in an iterative manner to minimize an error function. 
+In g.d. you run all the samples to do a single update for a parameter in each iteration.
+If the number of samples is large then g.d. would take to long because in every iteration when you are updating the values of the parameters you are running through the complete sample set.
+In stoc. g.d. you would only use one randomly chosen permutation per iteration and it would start improving itself from the first sample.
+Stoc. g.d. often converges much faster than g.d. but the error function is not as well minimized as in the case of g.d..
 
 ### How do you think the optimisation path (the path $\left (k, f(x_k) \right )$) looks like for stochastic gradient descent compared to that of the gradient descent?
 
 ### **Optional**: Implement stochastic gradient descent.
+```{r, echo = FALSE}
+x_0 <- c(-19, 3.6)
+x_k <- x_0
+f(x_k)
+g(x_k)
+
+# params
+a_0 <- 1
+r_k <- 0.5
+c1 <- 1e-4
+c2 <- 4e-1
+
+eps <- 5e-6
+  #.Machine$double.eps
+tol_grad_f <- eps
+
+k <- 0
+k_max <- 10000
+keep_going <- TRUE
+x_iterates <- x_0
+a_iterates <- rep(NA_real_, 10000)
+
+agrid <- seq(-22,-15,.1)
+bgrid <- seq(3.5,4.5,.1)
+zvalues <- matrix(NA_real_,length(agrid),length(bgrid))
+for (i in 1:length(agrid)) {
+  for (j in 1:length(bgrid)) {
+    zvalues[i,j] <- f(c(agrid[i],bgrid[j]))
+  }
+}
+my_levels <- seq(150, 400, 10)
+contour(agrid, bgrid, zvalues, levels = my_levels)
+points(x_0[1], x_0[2])
+it <- 0
+while (keep_going) {
+  it <- it + 1
+  s <- cars$speed; d <- cars$dist
+  random_numbers <- sample(1:50, 10)
+  s <- s[random_numbers]; d <- d[random_numbers]
+  k <- k + 1
+  a_k <- alpha(a_0, x_k, c1, c2, r_k)
+  g_k <- g(x_k)
+  
+  p_k <- -g_k
+  
+  x_k_old <- x_k
+  g_k_old <- g_k
+  
+  x_k <- x_k + a_k*p_k
+  s <- cars$speed; d <- cars$dist
+  f_k <- f(x_k)
+  
+#  cat("k =", k, ";\t f = ", f_k, ";\t x = ", x_k, ";\t ||g|| =", norm2(g_k),
+#      ";\t a =", a_k, "\t\n")
+  keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
+  
+  #plot iterates
+  if (it %% 100 == 0) {
+    points(x_k[1], x_k[2])
+  }
+  
+  #save the iterates
+  x_iterates <- rbind(x_iterates, x_k)
+  a_iterates[k] <- a_k
+#  cat(x_k, a_k, norm2(g_k), '\n')
+}
+
+cat("x_k = ", x_k, "\n")
+cat("f_k = ", f_k, "\n")
+cat("g_k = ", g_k, "\n")
+```
 
 ### **Optional**: Illustrate the behaviour of the stochastic gradient descent, including:
+Here is a plot of how the objective function behaves for different iterates of the stoc. g.d. algorithm.
+```{r}
+s <- cars$speed; d <- cars$dist
+fx_k <- rep(NA_real_, length(x_iterates[,1]))
+for (i in 1:length(x_iterates[,1])) {
+  fx_k[i] <- f(x_iterates[i,]) 
+}
+plot(1:length(x_iterates[,1]), fx_k, type = 'l')
+range(fx_k)
+#-17.57912 3.93241
+```
 
 #### Different ways to choose step sizes.
 
