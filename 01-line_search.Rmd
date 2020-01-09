@@ -8,7 +8,7 @@ f(a, b) = \frac{1}{n} \sum_{i = 1}^n f_i(a, b),
 \end{align}
 where
 \begin{align}
-f_i(a, b) = (m(s_i) - d_i)^2 .
+f_i(a, b) = (m(s_i) - d_i)^2.
 \end{align}
 
 ### What is the gradient of $f$?
@@ -201,7 +201,9 @@ strong_wolfe_gd <-
     keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
     
     #plot iterates
-    points(x_k[1], x_k[2])
+    if (k == 1 || k %% 100 == 0) {
+      points(x_k[1], x_k[2])
+    }
   }
   cat('x_k =', x_k, '\t', 'f(x_k) =', f(x_k), '\t', 'k =', k, '\n')
 }
@@ -210,10 +212,11 @@ strong_wolfe_gd(f,g, c(-19, 3.6))
 
 ### Show some iterates in a plot showing the data (e.g. `plot(dist ~ speed, cars)`)
 With the basic gradient descent function the iterates is shown in the following plot where we have plotted the regression line for the first, tenth, fiftieth and the for every 20.000 steps.
+
 ```{r, echo = FALSE}
+plot(s,d)
 norm2 <- function(x) norm(as.matrix(x), type = "2")
 k_max <- 100000
-plot(s,d)
 x_0 <- c(1,1)
 x_k <- x_0
 step_alpha <- 1e-4

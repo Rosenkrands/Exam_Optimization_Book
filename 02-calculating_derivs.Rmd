@@ -12,7 +12,7 @@ $$ f(x+2h) - f(x-2h) = 4h f'(x) + \frac{8 h^3}{3} f'''(x) + O(h^4)$$
 To get rid of the third term we write
 $$8f(x+h) - 8f(x-h) - f(x+2h)+f(x-2h) = 12 h f'(x) + O(h^4)$$
 Thus we have
-$$f'(x) = 8 f(x+h) - 8f(x-h) - f(x+2h) - f(x+2h) + f(x-2h)}{12h}$$
+$$f'(x) = 8 f(x+h) - 8f(x-h) - f(x+2h) - f(x+2h) + f(x-2h)12h$$
 where our truncation error is $O(h^4)$, which all else equal is better than for both forward and central differencing. 
 These are $O(h)$ and $O(h^2)$ respectively.
 
