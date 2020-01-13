@@ -1,11 +1,37 @@
 # Calculating derivatives
-
 Many numerical optimization algorithms use the gradient to minimize the respective objective function.
 However sometimes it can be time-consuming if the objective function is complicated.
 Therefore it would beneficial to have the algortihm calculate the derivative automatically.
 There are several different approaches that could be taken.
+The first approach we will consider is called finite differencing.
 
 ## Finite differencing
+The idea is to estimate the derivatives by observing the change in function values in response to small perturbations of the unknowns near a given point.
+In the case of forward-difference our estimate of the gradient for a function is given by
+\begin{align*}
+  \frac{\partial f}{\partial x_i}(x) \approx \frac{f(x + \varepsilon e_i)}{\varepsilon}.
+\end{align*}
+In the case of central-difference our estimate is given as
+\begin{align*}
+  \frac{\partial f}{\partial x_i}(x) \approx \frac{f(x + \varepsilon e_i) - f(x - \varepsilon e_i)}{2\varepsilon}.
+\end{align*}
+These estimate arises from Taylor's formula that states
+\begin{align*}
+  f(x + h) &= f(x) + hf'(x) + \frac{1}{2}h^2f''(x) + \frac{1}{6}h^3f'''(x) - O(h^4),
+\end{align*}
+rearranging gives that
+\begin{align*}
+  f'(x) &= \frac{f(x + h) - f(x)}{h} + \frac{1}{2}hf''(x) + \frac{1}{6}h^2f'''(x) - O(h^3).
+\end{align*}
+By considering only the first term after the equality we give rise to a truncation error.
+We are only interested in $0 < h < 1$, such that the truncation error becomes $O(h)$.
+Furthermore the truncation error decreases as $h$ decreases.
+The could lead us to believe that we can then choose a very small $h$ a go on our merry way.
+However this is not the case due to floating point arithmetic producing a round-off error.
+It can be shown that the round-off error bound is $O(\varepsilon_M/h)$, i.e. the round-off error increases with $h$.
+Thus we have established that there is a trade-off between truncation and round-off error.
+
+
 
 ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil".
 
