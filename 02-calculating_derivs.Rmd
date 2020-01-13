@@ -31,6 +31,26 @@ However this is not the case due to floating point arithmetic producing a round-
 It can be shown that the round-off error bound is $O(\varepsilon_M/h)$, i.e. the round-off error increases with $h$.
 Thus we have established that there is a trade-off between truncation and round-off error.
 
+The difference between the estimates for the two methods can be seen in the following plot.
+```{r}
+f <- function(x) sin(x)
+g <- function(x) cos(x)
+fd <- function(x){
+  h <- 1e-1
+  (f(x + h) - f(x))/h
+}
+cd <- function(x){
+  h <- 1e-1
+  (f(x + h) - f(x - h))/(2*h)
+}
+int <- seq(-0.3,0.3, 0.01)
+curve(g, min(int), max(int))
+lines(int, fd(int), col = 'blue')
+lines(int, cd(int), col = 'green')
+legend('topright', legend = c('cos(x)', 'FD', 'CD'),
+       col = c('black', 'blue', 'green'), 
+       lty = 1, cex = 0.8)
+```
 
 
 ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil".
