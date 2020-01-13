@@ -1,6 +1,11 @@
 # Calculating derivatives
 
-## Exercise 1
+Many numerical optimization algorithms use the gradient to minimize the respective objective function.
+However sometimes it can be time-consuming if the objective function is complicated.
+Therefore it would beneficial to have the algortihm calculate the derivative automatically.
+There are several different approaches that could be taken.
+
+## Finite differencing
 
 ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil".
 
