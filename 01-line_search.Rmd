@@ -173,6 +173,7 @@ zoom <- function(a_lo, a_hi, x_k, c1, c2) {
 ```
 
 We can then create a function that uses the line search and zoom algortihm to actually minimize the objective function.
+
 ```{r}
 strong_wolfe_gd <-
   function(f, g, x_0, a_0 = 1, r_k = 0.5,
@@ -235,7 +236,6 @@ This algortihm converged in 662 steps whereas the simpler algorithm did not conv
 To see the difference in the two algorithms for just the first 50 iterations the following plot can be considered.
 Notice how much difference progress there is the two algorithms in just the first step.
 
-
 ```{r, include = F}
 plot.data <- cbind('Fixed-step' = basic_gd(output = TRUE), 'Strong-Wolfe' = strong_wolfe_gd(output = TRUE, f, g, c(-19,3.6)), 'Iteration' = seq(1,100001,1))
 library(tidyverse)
@@ -249,8 +249,7 @@ ggplot(plot.data.long) +
   theme_minimal()
 ```
 
-I suspect that the reason for little reduction in the objective function after the first step is due to poor scaling.
-
+I suspect that the reason for the little reduction in the objective function after the first step is due to poor scaling.
 
 <!-- Throughout this exercise we will utilize the `cars` dataset and we will refer to speed by $s$ and distance by $d$. -->
 
