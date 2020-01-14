@@ -104,7 +104,7 @@ legend("topleft", legend = c("FD", "CD", "Five-Point"),
 ```
 
 ## Finite difference gradient descent algortihm
-We can now present a gradient descent algorithm that uses the FD and CD approach.
+We have implemented four different algortihms that utilizes the exact gradient, forward differencing, central difference and the five point stencil respectively.
 
 ```{r gradient_descent_algorithms, include=F}
 # Exact functions
@@ -487,6 +487,8 @@ bench <- bench %>%
   summarise(mean_time = mean(time)/1e+6)
 ```
 
+The following graph show how the different algorithms performed on average across 10 runs.
+
 ```{r plotting_the_results, echo = F, fig.height=3, fig.width=8}
 library(ggplot2)
 ggplot(bench) + 
@@ -496,6 +498,10 @@ ggplot(bench) +
   theme_minimal()
 ```
 
+We can conclude that in this particular instance, we have the exact gradient giving the best performance.
+From there the on the more complicated we make the finite differencing, the more performance we lose.
+However this is only in this particular instance.
+Suppose we have a very complicated objective function, in that case we could imagine that if we can make our gradient estimate more precise it would be worth the added computation invloved.
 
 <!-- ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil". -->
 
