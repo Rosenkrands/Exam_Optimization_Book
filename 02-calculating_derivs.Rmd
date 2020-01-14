@@ -7,32 +7,48 @@ The first approach we will consider is called finite differencing.
 
 ## Finite differencing
 The idea is to estimate the derivatives by observing the change in function values in response to small perturbations of the unknowns near a given point.
+
+### Foward difference
 In the case of forward-difference our estimate of the gradient for a function is given by
-\begin{align*}
+\begin{align}
   \frac{\partial f}{\partial x_i}(x) \approx \frac{f(x + \varepsilon e_i)}{\varepsilon}.
-\end{align*}
+\end{align}
 In the case of central-difference our estimate is given as
-\begin{align*}
+\begin{align}
   \frac{\partial f}{\partial x_i}(x) \approx \frac{f(x + \varepsilon e_i) - f(x - \varepsilon e_i)}{2\varepsilon}.
-\end{align*}
+\end{align}
 These estimate arises from Taylor's formula that states
-\begin{align*}
+\begin{align}
   f(x + h) &= f(x) + hf'(x) + \frac{1}{2}h^2f''(x) + \frac{1}{6}h^3f'''(x) - O(h^4),
-\end{align*}
+\end{align}
 rearranging gives that
-\begin{align*}
+\begin{align}
   f'(x) &= \frac{f(x + h) - f(x)}{h} + \frac{1}{2}hf''(x) + \frac{1}{6}h^2f'''(x) - O(h^3).
-\end{align*}
+\end{align}
 By considering only the first term after the equality we give rise to a truncation error.
 We are only interested in $0 < h < 1$, such that the truncation error becomes $O(h)$.
 Furthermore the truncation error decreases as $h$ decreases.
 The could lead us to believe that we can then choose a very small $h$ a go on our merry way.
 However this is not the case due to floating point arithmetic producing a round-off error.
-It can be shown that the round-off error bound is $O(\varepsilon_M/h)$, i.e. the round-off error increases with $h$.
+It can be shown that the round-off error bound is $O(\varepsilon_M/h)$, i.e. the round-off error increases as $h$ decreases.
 Thus we have established that there is a trade-off between truncation and round-off error.
 
-The difference between the estimates for the two methods can be seen in the following plot.
-```{r}
+### Central difference
+Consider now both forward and backward difference, giving by
+\begin{align}
+  f(x + h) &= f(x) + hf'(x) + \frac{1}{2}h^2f''(x) + O(h^3) \\
+  f(x - h) &= f(x) - hf'(x) + \frac{1}{2}h^2f''(x) + O(h^3),
+\end{align}
+subtracting these two equations leads us to the following expression
+\begin{align}
+  f'(x) = \frac{f(x + h) - f(x - h)}{2h} - O(h^2).
+\end{align}
+In other words the truncation error is now smaller, however we need to evaluate the objective function twice.
+This will have an impact on the performance of the algorithm, that depends on how expensive the objective function is to evaluate.
+
+The difference between the estimates from the two methods can be seen in the following plot.
+
+```{r echo=F, fig.height=4, fig.width=8}
 f <- function(x) sin(x)
 g <- function(x) cos(x)
 fd <- function(x){
@@ -52,32 +68,30 @@ legend('topright', legend = c('cos(x)', 'FD', 'CD'),
        lty = 1, cex = 0.8)
 ```
 
+It is clear to see that the CD is closer to the actual gradient than the FD is.
 
-### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil".
-
-First we deduce the five point stencil rule by Taylor expansion
-$$f(x \pm h) = f(x) \pm h f'(x) + \frac{h^2}{2!} f''(x) \pm \frac{h^3}{3!} f'''(x) + O(h^4)$$
-
-$$f(x+h) - f(x-h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) O(h^4)$$
-$$ f(x+2h) - f(x-2h) = 4h f'(x) + \frac{8 h^3}{3} f'''(x) + O(h^4)$$
-To get rid of the third term we write
-$$8f(x+h) - 8f(x-h) - f(x+2h)+f(x-2h) = 12 h f'(x) + O(h^4)$$
-Thus we have
-$$f'(x) = \frac{8 f(x+h) - 8f(x-h) - f(x+2h) + f(x-2h)}{12h}$$
-where our truncation error is $O(h^4)$, which all else equal is better than for both forward and central differencing. 
-These are $O(h)$ and $O(h^2)$ respectively.
-
-### Analyse this method in comparison with FD and CD (theoretically and practically on specific examples)
-
-### What are the advantages and disadvantages of the different finite difference methods?
-When we use more point to calculate the derivative we get a smaller truncation error thus allowing us to use a smaller value for $h$.
-The disadvantage is that the function needs to be evaluated in more points which could be expensive.
-Therefore the choice of method depends on the specific problem.
-
-## Exercise 2
+## Finite difference gradient descent algortihm
 
 
-## Exercise 3
+<!-- ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil". -->
 
+<!-- First we deduce the five point stencil rule by Taylor expansion -->
+<!-- $$f(x \pm h) = f(x) \pm h f'(x) + \frac{h^2}{2!} f''(x) \pm \frac{h^3}{3!} f'''(x) + O(h^4)$$ -->
+
+<!-- $$f(x+h) - f(x-h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) O(h^4)$$ -->
+<!-- $$ f(x+2h) - f(x-2h) = 4h f'(x) + \frac{8 h^3}{3} f'''(x) + O(h^4)$$ -->
+<!-- To get rid of the third term we write -->
+<!-- $$8f(x+h) - 8f(x-h) - f(x+2h)+f(x-2h) = 12 h f'(x) + O(h^4)$$ -->
+<!-- Thus we have -->
+<!-- $$f'(x) = \frac{8 f(x+h) - 8f(x-h) - f(x+2h) + f(x-2h)}{12h}$$ -->
+<!-- where our truncation error is $O(h^4)$, which all else equal is better than for both forward and central differencing.  -->
+<!-- These are $O(h)$ and $O(h^2)$ respectively. -->
+
+<!-- ### Analyse this method in comparison with FD and CD (theoretically and practically on specific examples) -->
+
+<!-- ### What are the advantages and disadvantages of the different finite difference methods? -->
+<!-- When we use more point to calculate the derivative we get a smaller truncation error thus allowing us to use a smaller value for $h$. -->
+<!-- The disadvantage is that the function needs to be evaluated in more points which could be expensive. -->
+<!-- Therefore the choice of method depends on the specific problem. -->
 
 \newpage
