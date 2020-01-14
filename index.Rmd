@@ -1,5 +1,5 @@
 --- 
-title: "Exam Optimization"
+title: "Optimization"
 author: "Kasper Rosenkrands"
 date: "Fall 2019"
 toc: true
@@ -11,8 +11,8 @@ include-before:
 
 \newpage
 
-# Introduction
+<!-- # Introduction -->
 
-This is a collection of the possible exam subjects at the optimization exam of the 2019 fall semester at Aalborg University.
+<!-- This is a collection of the possible exam subjects at the optimization exam of the 2019 fall semester at Aalborg University. -->
 
-\newpage
+<!-- \newpage -->
