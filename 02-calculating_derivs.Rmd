@@ -48,7 +48,7 @@ This will have an impact on the performance of the algorithm, that depends on ho
 
 The difference between the estimates from the two methods can be seen in the following plot.
 
-```{r echo=F, fig.height=4, fig.width=8}
+```{r comparing_the_two_methods, echo=F, fig.height=4, fig.width=8}
 f <- function(x) sin(x)
 g <- function(x) cos(x)
 fd <- function(x){
@@ -70,16 +70,10 @@ legend('topright', legend = c('cos(x)', 'FD', 'CD'),
 
 It is clear to see that the CD is closer to the actual gradient than the FD is.
 
-## Finite difference gradient descent algortihm
-We can now present a gradient descent algorithm that uses the FD and CD approach.
-
-
-
-
 ## Five-Point stencil
 The performance for the three different methods can be seen in the plot below.
 
-```{r echo=F, fig.height=4, fig.width=8}
+```{r comparing_the_three_methods, echo=F, fig.height=4, fig.width=8}
 h <- 0.1
 f <- function(x) {sin(x)}
 g_exact <- function(x) {cos(x)}
@@ -108,6 +102,400 @@ legend("topleft", legend = c("FD", "CD", "Five-Point"),
        col = c("black", "blue", "green"),
        lty = 1, cex = 0.8)
 ```
+
+## Finite difference gradient descent algortihm
+We can now present a gradient descent algorithm that uses the FD and CD approach.
+
+```{r gradient_descent_algorithms, include=F}
+# Exact functions
+f <- function(x) 100*(x[2] - x[1]^2)^2 + (1 - x[1])^2
+g <- function(x) c(2*(x[1] - 1) - 400*x[1]*(x[2] - x[1]^2), 200*(x[2] - x[1]^2))
+# Implementation of Algorithm 3.5
+# (Line Search Algorithm)
+alpha <- function(a_0, x_k, c1, c2, r_k) {
+  a_max <- 4*a_0
+  f_k <- f(x_k)
+  phi_k <- f_k
+  a_1 <- a_0
+  a0 <- 0
+  a_k <- a_1
+  a_k_old <- a0
+  k <- 0
+  k_max <- 10000   
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    f_k <- f(x_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    phi_k_old <- f(x_k + a_k_old * p_k)
+      phi_k <- f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <- f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || ((k > 1) && (phi_k >= phi_k_old))) {
+        return(zoom(a_k_old, a_k, x_k, c1, c2))
+      }
+    dphi_k <- t(g(x_k + a_k * p_k)) %*% p_k
+      if (abs(dphi_k) <= -c2*dphi_k_0) {
+        return(a_k)
+      }
+    if (dphi_k >= 0) {
+      return(zoom(a_k, a_k_old, x_k, c1, c2))
+    }
+    a_k_old <- a_k
+    a_k <- r_k*a_k + (1 - r_k)*a_max
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+# Implementation of Algorithm ...
+# (Zoom Algorithm)
+zoom <- function(a_lo, a_hi, x_k, c1, c2) {
+  f_k <- f(x_k)
+  g_k <- g(x_k)
+  p_k <- -g_k
+  k <- 0
+  k_max <- 10000   # Maximum number of iterations.
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    phi_lo <- f(x_k + a_lo * p_k)
+      a_k <- 0.5*(a_lo + a_hi)
+      phi_k <-  f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <-  f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || (phi_k >= phi_lo)) {
+        a_hi <- a_k
+      } else {
+        dphi_k <-  t(g(x_k + a_k * p_k)) %*% p_k
+          if (abs(dphi_k) <= -c2*dphi_k_0) {
+            return(a_k)
+          }
+        if (dphi_k*(a_hi - a_lo) >= 0) {
+          a_hi <- a_lo
+        }
+        a_lo <- a_k
+      }
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+# Implementation of Algorithm 3.5 (with CD instead of exact gradient)
+# (Line Search Algorithm)
+alpha_cd <- function(a_0, x_k, c1, c2, r_k) {
+  g <- function(x, h = 1e-8){
+    c((f(x + c(h,0)) - f(x - c(h,0)))/(2*h), (f(x + c(0,h)) - f(x - c(0,h)))/(2*h))
+  }
+  a_max <- 4*a_0
+  f_k <- f(x_k)
+  phi_k <- f_k
+  a_1 <- a_0
+  a0 <- 0
+  a_k <- a_1
+  a_k_old <- a0
+  k <- 0
+  k_max <- 10000   
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    f_k <- f(x_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    phi_k_old <- f(x_k + a_k_old * p_k)
+      phi_k <- f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <- f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || ((k > 1) && (phi_k >= phi_k_old))) {
+        return(zoom_cd(a_k_old, a_k, x_k, c1, c2))
+      }
+    dphi_k <- t(g(x_k + a_k * p_k)) %*% p_k
+      if (abs(dphi_k) <= -c2*dphi_k_0) {
+        return(a_k)
+      }
+    if (dphi_k >= 0) {
+      return(zoom_cd(a_k, a_k_old, x_k, c1, c2))
+    }
+    a_k_old <- a_k
+    a_k <- r_k*a_k + (1 - r_k)*a_max
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+# Implementation of Algorithm ... (with CD instead of exact gradient)
+# (Zoom Algorithm)
+zoom_cd <- function(a_lo, a_hi, x_k, c1, c2) {
+  g <- function(x, h = 1e-8){
+    c((f(x + c(h,0)) - f(x - c(h,0)))/(2*h), (f(x + c(0,h)) - f(x - c(0,h)))/(2*h))
+  }
+  f_k <- f(x_k)
+  g_k <- g(x_k)
+  p_k <- -g_k
+  k <- 0
+  k_max <- 10000   # Maximum number of iterations.
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    phi_lo <- f(x_k + a_lo * p_k)
+      a_k <- 0.5*(a_lo + a_hi)
+      phi_k <-  f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <-  f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || (phi_k >= phi_lo)) {
+        a_hi <- a_k
+      } else {
+        dphi_k <-  t(g(x_k + a_k * p_k)) %*% p_k
+          if (abs(dphi_k) <= -c2*dphi_k_0) {
+            return(a_k)
+          }
+        if (dphi_k*(a_hi - a_lo) >= 0) {
+          a_hi <- a_lo
+        }
+        a_lo <- a_k
+      }
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+alpha_fd <- function(a_0, x_k, c1, c2, r_k) {
+  g <- function(x, h = 1e-8){
+    c((f(x + c(h,0)) - f(x))/(h), (f(x + c(0,h)) - f(x))/(h))
+  }
+  a_max <- 4*a_0
+  f_k <- f(x_k)
+  phi_k <- f_k
+  a_1 <- a_0
+  a0 <- 0
+  a_k <- a_1
+  a_k_old <- a0
+  k <- 0
+  k_max <- 10000   
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    f_k <- f(x_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    phi_k_old <- f(x_k + a_k_old * p_k)
+      phi_k <- f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <- f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || ((k > 1) && (phi_k >= phi_k_old))) {
+        return(zoom_fd(a_k_old, a_k, x_k, c1, c2))
+      }
+    dphi_k <- t(g(x_k + a_k * p_k)) %*% p_k
+      if (abs(dphi_k) <= -c2*dphi_k_0) {
+        return(a_k)
+      }
+    if (dphi_k >= 0) {
+      return(zoom_fd(a_k, a_k_old, x_k, c1, c2))
+    }
+    a_k_old <- a_k
+    a_k <- r_k*a_k + (1 - r_k)*a_max
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+# Implementation of Algorithm ... (with CD instead of exact gradient)
+# (Zoom Algorithm)
+zoom_fd <- function(a_lo, a_hi, x_k, c1, c2) {
+  g <- function(x, h = 1e-8){
+    c((f(x + c(h,0)) - f(x))/(h), (f(x + c(0,h)) - f(x))/(h))
+  }
+  f_k <- f(x_k)
+  g_k <- g(x_k)
+  p_k <- -g_k
+  k <- 0
+  k_max <- 10000   # Maximum number of iterations.
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    phi_lo <- f(x_k + a_lo * p_k)
+      a_k <- 0.5*(a_lo + a_hi)
+      phi_k <-  f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <-  f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || (phi_k >= phi_lo)) {
+        a_hi <- a_k
+      } else {
+        dphi_k <-  t(g(x_k + a_k * p_k)) %*% p_k
+          if (abs(dphi_k) <= -c2*dphi_k_0) {
+            return(a_k)
+          }
+        if (dphi_k*(a_hi - a_lo) >= 0) {
+          a_hi <- a_lo
+        }
+        a_lo <- a_k
+      }
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+alpha_fp <- function(a_0, x_k, c1, c2, r_k) {
+  g <- function(x, h = 1e-8){
+    c((8*f(x + c(h,0)) - 8*f(x - c(h,0)) - f(x + c(2*h,0)) + f(x - c(2*h,0)))/(12*h),
+      (8*f(x + c(0,h)) - 8*f(x - c(0,h)) - f(x + c(0,2*h)) + f(x - c(0,2*h)))/(12*h))
+  }
+  a_max <- 4*a_0
+  f_k <- f(x_k)
+  phi_k <- f_k
+  a_1 <- a_0
+  a0 <- 0
+  a_k <- a_1
+  a_k_old <- a0
+  k <- 0
+  k_max <- 10000   
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    f_k <- f(x_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    phi_k_old <- f(x_k + a_k_old * p_k)
+      phi_k <- f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <- f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || ((k > 1) && (phi_k >= phi_k_old))) {
+        return(zoom_fp(a_k_old, a_k, x_k, c1, c2))
+      }
+    dphi_k <- t(g(x_k + a_k * p_k)) %*% p_k
+      if (abs(dphi_k) <= -c2*dphi_k_0) {
+        return(a_k)
+      }
+    if (dphi_k >= 0) {
+      return(zoom_fp(a_k, a_k_old, x_k, c1, c2))
+    }
+    a_k_old <- a_k
+    a_k <- r_k*a_k + (1 - r_k)*a_max
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+
+# Implementation of Algorithm ... (with CD instead of exact gradient)
+# (Zoom Algorithm)
+zoom_fp <- function(a_lo, a_hi, x_k, c1, c2) {
+  g <- function(x, h = 1e-8){
+    c((8*f(x + c(h,0)) - 8*f(x - c(h,0)) - f(x + c(2*h,0)) + f(x - c(2*h,0)))/(12*h),
+      (8*f(x + c(0,h)) - 8*f(x - c(0,h)) - f(x + c(0,2*h)) + f(x - c(0,2*h)))/(12*h))
+  }
+  f_k <- f(x_k)
+  g_k <- g(x_k)
+  p_k <- -g_k
+  k <- 0
+  k_max <- 10000   # Maximum number of iterations.
+  done <- FALSE
+  while(!done) {
+    k <- k + 1
+    phi_lo <- f(x_k + a_lo * p_k)
+      a_k <- 0.5*(a_lo + a_hi)
+      phi_k <-  f(x_k + a_k * p_k)
+      dphi_k_0 <- t(g(x_k)) %*% p_k
+      l_k <-  f_k + c1 * a_k * dphi_k_0
+      if ((phi_k > l_k) || (phi_k >= phi_lo)) {
+        a_hi <- a_k
+      } else {
+        dphi_k <-  t(g(x_k + a_k * p_k)) %*% p_k
+          if (abs(dphi_k) <= -c2*dphi_k_0) {
+            return(a_k)
+          }
+        if (dphi_k*(a_hi - a_lo) >= 0) {
+          a_hi <- a_lo
+        }
+        a_lo <- a_k
+      }
+    done <- (k > k_max)
+  }
+  return(a_k)
+}
+# Define norm to determine convergence
+norm2 <- function(x) norm(as.matrix(x), type = "2")
+
+# The base algorithm that uses the exact gradient
+gd.strong.wolfe <- function(f, g, x_0, a_0 = 1, r_k = 0.5, c1 = 1e-4, c2 = 4e-1, tol_grad_f = 5e-4, k_max = 10000) {
+  keep_going <- TRUE
+  x_k <- x_0
+  k <- 0
+  while (keep_going) {
+    k <- k + 1
+    a_k <- alpha(a_0, x_k, c1, c2, r_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    x_k <- x_k + a_k*p_k
+    keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
+  }
+  #cat('x_k =', x_k, '\t', 'f(x_k) =', f(x_k), '\t', 'k =', k, '\n')
+}
+gd.strong.wolfe.FD <- function(f, g, x_0, a_0 = 1, r_k = 0.5, c1 = 1e-4, c2 = 4e-1, tol_grad_f = 5e-4, k_max = 10000) {
+  keep_going <- TRUE
+  x_k <- x_0
+  k <- 0
+  while (keep_going) {
+    k <- k + 1
+    a_k <- alpha_fd(a_0, x_k, c1, c2, r_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    x_k <- x_k + a_k*p_k
+    keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
+  }
+  #cat('x_k =', x_k, '\t', 'f(x_k) =', f(x_k), '\t', 'k =', k, '\n')
+}
+gd.strong.wolfe.CD <- function(f, g, x_0, a_0 = 1, r_k = 0.5, c1 = 1e-4, c2 = 4e-1, tol_grad_f = 5e-4, k_max = 10000) {
+  keep_going <- TRUE
+  x_k <- x_0
+  k <- 0
+  while (keep_going) {
+    k <- k + 1
+    a_k <- alpha_cd(a_0, x_k, c1, c2, r_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    x_k <- x_k + a_k*p_k
+    keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
+  }
+  #cat('x_k =', x_k, '\t', 'f(x_k) =', f(x_k), '\t', 'k =', k, '\n')
+}
+gd.strong.wolfe.FP <- function(f, g, x_0, a_0 = 1, r_k = 0.5, c1 = 1e-4, c2 = 4e-1, tol_grad_f = 5e-4, k_max = 10000) {
+  keep_going <- TRUE
+  x_k <- x_0
+  k <- 0
+  while (keep_going) {
+    k <- k + 1
+    a_k <- alpha_fp(a_0, x_k, c1, c2, r_k)
+    g_k <- g(x_k)
+    p_k <- -g_k
+    x_k <- x_k + a_k*p_k
+    keep_going <- (norm2(g_k) >= tol_grad_f) & (k < k_max)
+  }
+  #cat('x_k =', x_k, '\t', 'f(x_k) =', f(x_k), '\t', 'k =', k, '\n')
+}
+```
+
+```{r comparing_the_algortihms, include = F}
+library(microbenchmark)
+bench <- microbenchmark(Exact = gd.strong.wolfe(f,g,c(0,1)),
+               FD = gd.strong.wolfe.FD(f,g,c(0,1)),
+               CD = gd.strong.wolfe.CD(f,g,c(0,1)),
+               FP = gd.strong.wolfe.FP(f,g,c(0,1)),
+               times = 10)
+library(dplyr)
+bench <- bench %>%
+  group_by(expr) %>%
+  summarise(mean_time = mean(time)/1e+6)
+```
+
+```{r plotting_the_results, echo = F, fig.height=3, fig.width=8}
+library(ggplot2)
+ggplot(bench) + 
+  geom_col(aes(x = expr, y = mean_time), width = 0.5, fill = 'darkblue') +
+  scale_y_continuous(breaks = seq(0,650,50)) +
+  xlab('') + ylab('Mean time') + ggtitle('Comparing test results') +
+  theme_minimal()
+```
+
 
 <!-- ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil". -->
 
