@@ -71,7 +71,43 @@ legend('topright', legend = c('cos(x)', 'FD', 'CD'),
 It is clear to see that the CD is closer to the actual gradient than the FD is.
 
 ## Finite difference gradient descent algortihm
+We can now present a gradient descent algorithm that uses the FD and CD approach.
 
+
+
+
+## Five-Point stencil
+The performance for the three different methods can be seen in the plot below.
+
+```{r echo=F, fig.height=4, fig.width=8}
+h <- 0.1
+f <- function(x) {sin(x)}
+g_exact <- function(x) {cos(x)}
+FD <- function(x) {
+  FDf <- (f(x + h) - f(x))/h    
+  return(FDf)
+}
+CD <- function(x) {
+  CDf <- (f(x + h) - f(x - h))/(2*h)
+  return(CDf)
+}
+XCD <- function(x) {
+  XCDf <- (8*f(x + h) - 8*f(x - h) - f(x + 2*h) + f(x - 2*h))/(12*h)
+  return(XCDf)
+}
+
+int <- seq(-.5,.5, 0.001)
+
+diff_XCD <- function(x) g_exact(x) - XCD(x)
+diff_CD <- function(x) g_exact(x) - CD(x)
+diff_FD <- function(x) g_exact(x) - FD(x)
+curve(diff_FD, min(int), max(int), ylab = "Difference", xlab = "")
+lines(int, diff_CD(int), col = 'blue')
+lines(int, diff_XCD(int), col = 'green')
+legend("topleft", legend = c("FD", "CD", "Five-Point"),
+       col = c("black", "blue", "green"),
+       lty = 1, cex = 0.8)
+```
 
 <!-- ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil". -->
 
