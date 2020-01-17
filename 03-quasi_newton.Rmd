@@ -1,3 +1,24 @@
 # Quasi Newton
+Recall that the newton method uses the hessian to minimize the objective function.
+On the contrary quasi-Newton methods uses an approximation of the true Hessian.
+Therefore these method are a good alternative when the Hessian is unavailable or just to expensive to compute.
+We could state it more formally in the following way; line search iterations are given by $x_{k + 1} = x_k + \alpha_k p_k$ where the search direction is given by $p_k = -B_k^{-1}\nabla f_k$.
+In the case of steepest descent $B_k = I$, for Newton's method $B_k = \nabla^2 f_k$ and for quasi-Newton methods $B_k$ is an approximation to the Heassian that is updated at every iteration by means of a low-rank formula.
 
+## BFGS
+The BFGS algorithm is the most popular of the quasi-Newton methods.
+First we will state the quadratic model of the objective function we will use at any given iteration
+\begin{align}
+  m_k(p) = f_k + \nabla f_k^{\top}p + \frac{1}{2}p^{\top}B_kp,
+\end{align}
+here $B_k$ is a symmetric and positive definite matrix that will be updated at every iteration.
+The minimizer $p_k$ of this convex quadratic model, which we can write explicitly as
+\begin{align}
+  p_k = -B_k^{-1}\nabla f_k
+\end{align}
+is used as the search direction and the new iterate is
+\begin{align}
+  x_{k + 1} = x_k + \alpha_k p_k,
+\end{align}
+where $\alpha_k$ is the step length
 \newpage

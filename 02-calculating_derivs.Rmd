@@ -540,7 +540,7 @@ Suppose we now want to find the derivative of this function w.r.t. $x_1$.
 If we denote the intermidiate variables by $v$, and to each variable associate a new variable, $\dot{v}_i = \partial v_i/\partial x_1$.
 We can then apply the chain rule mechanically to each line in the evaluation trace, this will then give the numerical value to each $\dot{v}_i$.
 First we will go thorugh the first iterations as an example, and then present the full evaluation trace
-\begin{align}
+\begin{align*}
   v_{-2} &= x_1 &&= 1 \\
   v_{-1} &= x_2 &&= 2 \\
   v_{0} &= x_3 &&= 3 \\
@@ -548,13 +548,13 @@ First we will go thorugh the first iterations as an example, and then present th
   v_{2} &= \cos(v_1) &&= -0.99 \\
   v_{3} &= v_2 \cdot v_0 &&= -2.97 \\
   y &= v_3 &&= -2.97 
-\end{align}
+\end{align*}
 Using the chain rule, given by
 \begin{align}
   \frac{\partial y}{\partial x_i} = \sum_{j = 1}^{m} \frac{\partial y}{\partial u_j}\frac{\partial u_j}{\partial x_i}
 \end{align}
 we find that
-\begin{align}
+\begin{align*}
   &\dot{v}_{-2} = \frac{\partial v_{-2}}{\partial x_1} = \frac{\partial}{\partial x_1}x_1 = 1, \quad \dot{v}_{-1} = \frac{\partial v_{-1}}{\partial x_1} = \frac{\partial}{\partial x_1}x_2 = 0 \quad \text{and} \quad \dot{v}_{0} = \frac{\partial v_{0}}{\partial x_1} = \frac{\partial}{\partial x_1}x_3 = 0 \\
   &\dot{v}_1 = \frac{\partial v_1}{\partial x_1} = 
   \frac{\partial v_1}{\partial v_{-2}}
@@ -570,9 +570,9 @@ we find that
   \frac{\partial v_1}{\partial v_{0}}
   0 =
   1.
-\end{align}
+\end{align*}
 The rest is calculated in the same manner, yielding the full evaluation trace as
-\begin{align}
+\begin{align*}
   v_{-2} &= x_1 &&= 1 \\
   \dot{v}_{-2} &= \dot{x}_1 &&= 1 \\
   v_{-1} &= x_2 &&= 2 \\
@@ -587,7 +587,7 @@ The rest is calculated in the same manner, yielding the full evaluation trace as
   \dot{v}_{3} &= -v_0 \cdot \sin(v_1) &&= -2.51 \\
   y &= \cos(x_1 + x_2)x_3 &&= -2.97 \\
   \dot{y} &= -\sin(x_1 + x_2)x_3 &&= -0.41.
-\end{align}
+\end{align*}
 
 #### Implementation
 Below is an implementation of algorithmic differentiation (forward mode.
