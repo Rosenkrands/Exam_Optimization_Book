@@ -497,7 +497,7 @@ bench <- microbenchmark(Exact = gd.strong.wolfe(f,g,c(0,1)),
                FD = gd.strong.wolfe.FD(f,g,c(0,1)),
                CD = gd.strong.wolfe.CD(f,g,c(0,1)),
                FP = gd.strong.wolfe.FP(f,g,c(0,1)),
-               times = 1)
+               times = 10)
 library(dplyr)
 bench <- bench %>%
   group_by(expr) %>%
