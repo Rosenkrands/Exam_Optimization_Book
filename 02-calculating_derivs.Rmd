@@ -76,6 +76,18 @@ legend('topright', legend = c('cos(x)', 'FD', 'CD'),
 It is clear to see that the CD is closer to the actual gradient than the FD is.
 
 ## Five-Point stencil
+Going further than the central difference formula, one could also include the terms $f(x + 2h)$ and $f(x - 2h)$ to cancel out even more terms.
+Recalliung the taylor expansion of $f$ gives
+$$f(x \pm h) = f(x) \pm h f'(x) + \frac{h^2}{2!} f''(x) \pm \frac{h^3}{3!} f'''(x) + O(h^4)$$
+$$f(x+h) - f(x-h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) O(h^4)$$
+$$ f(x+2h) - f(x-2h) = 4h f'(x) + \frac{8 h^3}{3} f'''(x) + O(h^4)$$
+To get rid of the third term we write
+$$8f(x+h) - 8f(x-h) - f(x+2h)+f(x-2h) = 12 h f'(x) + O(h^4)$$
+Thus we have
+$$f'(x) = \frac{8 f(x+h) - 8f(x-h) - f(x+2h) + f(x-2h)}{12h}$$
+where our truncation error is $O(h^4)$, which all else equal is better than for both forward and central differencing.
+These are $O(h)$ and $O(h^2)$ respectively.
+
 The performance for the three different methods can be seen in the plot below.
 
 ```{r comparing_the_three_methods, echo=F, fig.height=4, fig.width=8}
@@ -508,6 +520,8 @@ From there, the more complicated we make the finite differencing, the more perfo
 However this is only in this particular instance.
 Suppose we have a very complicated objective function, in that case we could imagine that if we can make our gradient estimate more precise it would be worth the added computation invloved.
 
+
+
 ## Algorithmic differentiation (AD)
 Algorithmic differentiation builds on the principle that, no matter how complicated a function might be, it builds on a sequence of simple elementary operations.
 To illustrate we will consider an example.
@@ -535,6 +549,45 @@ First we will go thorugh the first iterations as an example, and then present th
   v_{2} &= \cos(v_1) &&= -0.99 \\
   v_{3} &= v_2 \cdot v_0 &&= -2.97 \\
   y &= v_3 &&= -2.97 
+\end{align}
+Using the chain rule, given by
+\begin{align}
+  \frac{\partial y}{\partial x_i} = \sum_{j = 1}^{m} \frac{\partial y}{\partial u_j}\frac{\partial u_j}{\partial x_i}
+\end{align}
+we find that
+\begin{align}
+  &\dot{v}_{-2} = \frac{\partial v_{-2}}{\partial x_1} = \frac{\partial}{\partial x_1}x_1 = 1, \quad \dot{v}_{-1} = \frac{\partial v_{-1}}{\partial x_1} = \frac{\partial}{\partial x_1}x_2 = 0 \quad \text{and} \quad \dot{v}_{0} = \frac{\partial v_{0}}{\partial x_1} = \frac{\partial}{\partial x_1}x_3 = 0 \\
+  &\dot{v}_1 = \frac{\partial v_1}{\partial x_1} = 
+  \frac{\partial v_1}{\partial v_{-2}}
+  \frac{\partial v_{-2}}{\partial x_1} + 
+  \frac{\partial v_1}{\partial v_{-1}}
+  \frac{\partial v_{-1}}{\partial x_1} + 
+  \frac{\partial v_1}{\partial v_{0}}
+  \frac{\partial v_{0}}{\partial x_1} =
+  \frac{\partial v_1}{\partial v_{-2}}
+  1 + 
+  \frac{\partial v_1}{\partial v_{-1}}
+  0 + 
+  \frac{\partial v_1}{\partial v_{0}}
+  0 =
+  1.
+\end{align}
+The rest is calculated in the same manner, yielding the full evaluation trace as
+\begin{align}
+  v_{-2} &= x_1 &&= 1 \\
+  \dot{v}_{-2} &= \dot{x}_1 &&= 1 \\
+  v_{-1} &= x_2 &&= 2 \\
+  \dot{v}_{-1} &= \dot{x}_2 &&= 0 \\
+  v_{0} &= x_3 &&= 3 \\
+  \dot{v}_{0} &= \dot{x}_3 &&= 0 \\
+  v_{1} &= v_{-2} + v_{-1} &&= 3 \\
+  \dot{v}_{1} &= 1 &&= 1 \\
+  v_{2} &= \cos(v_1) &&= -0.99 \\
+  \dot{v}_{2} &= -\sin(v_1) &&= -0.83 \\
+  v_{3} &= v_2 \cdot v_0 &&= -2.97 \\
+  \dot{v}_{3} &= -v_0 \cdot \sin(v_1) &&= -2.51 \\
+  y &= \cos(x_1 + x_2)x_3 &&= -2.97 \\
+  \dot{y} &= -\sin(x_1 + x_2)x_3 &&= -0.41
 \end{align}
 
 <!-- ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil". -->
