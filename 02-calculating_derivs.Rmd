@@ -79,7 +79,7 @@ It is clear to see that the CD is closer to the actual gradient than the FD is.
 Going further than the central difference formula, one could also include the terms $f(x + 2h)$ and $f(x - 2h)$ to cancel out even more terms.
 Recalliung the taylor expansion of $f$ gives
 $$f(x \pm h) = f(x) \pm h f'(x) + \frac{h^2}{2!} f''(x) \pm \frac{h^3}{3!} f'''(x) + O(h^4)$$
-$$f(x+h) - f(x-h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) O(h^4)$$
+$$f(x+h) - f(x-h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) + O(h^4)$$
 $$ f(x+2h) - f(x-2h) = 4h f'(x) + \frac{8 h^3}{3} f'''(x) + O(h^4)$$
 To get rid of the third term we write
 $$8f(x+h) - 8f(x-h) - f(x+2h)+f(x-2h) = 12 h f'(x) + O(h^4)$$
@@ -520,9 +520,8 @@ From there, the more complicated we make the finite differencing, the more perfo
 However this is only in this particular instance.
 Suppose we have a very complicated objective function, in that case we could imagine that if we can make our gradient estimate more precise it would be worth the added computation invloved.
 
-
-
 ## Algorithmic differentiation (AD)
+### Forward mode
 Algorithmic differentiation builds on the principle that, no matter how complicated a function might be, it builds on a sequence of simple elementary operations.
 To illustrate we will consider an example.
 Take the function
@@ -587,29 +586,85 @@ The rest is calculated in the same manner, yielding the full evaluation trace as
   v_{3} &= v_2 \cdot v_0 &&= -2.97 \\
   \dot{v}_{3} &= -v_0 \cdot \sin(v_1) &&= -2.51 \\
   y &= \cos(x_1 + x_2)x_3 &&= -2.97 \\
-  \dot{y} &= -\sin(x_1 + x_2)x_3 &&= -0.41
+  \dot{y} &= -\sin(x_1 + x_2)x_3 &&= -0.41.
 \end{align}
 
-<!-- ### What would happen if we extend the central-difference to also use $f(x - 2h)$ and $f(x + 2h)$? Hint: consider the Taylor series up to a sufficiently high power of $h$. Hint: "five-point stencil". -->
+#### Implementation
+Below is an implementation of algorithmic differentiation (forward mode.
 
-<!-- First we deduce the five point stencil rule by Taylor expansion -->
-<!-- $$f(x \pm h) = f(x) \pm h f'(x) + \frac{h^2}{2!} f''(x) \pm \frac{h^3}{3!} f'''(x) + O(h^4)$$ -->
+```{r create_ADnum_class}
+# Make an algorithmic differentiation number
+create_ADnum <- function(val, deriv = 1) {
+  # a list that includes the number and its derivative
+  x <- list(val = val, deriv = deriv)
+  # make a class in R called 'ADnum'
+  class(x) <- 'ADnum'
+  return(x)
+}
 
-<!-- $$f(x+h) - f(x-h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) O(h^4)$$ -->
-<!-- $$ f(x+2h) - f(x-2h) = 4h f'(x) + \frac{8 h^3}{3} f'''(x) + O(h^4)$$ -->
-<!-- To get rid of the third term we write -->
-<!-- $$8f(x+h) - 8f(x-h) - f(x+2h)+f(x-2h) = 12 h f'(x) + O(h^4)$$ -->
-<!-- Thus we have -->
-<!-- $$f'(x) = \frac{8 f(x+h) - 8f(x-h) - f(x+2h) + f(x-2h)}{12h}$$ -->
-<!-- where our truncation error is $O(h^4)$, which all else equal is better than for both forward and central differencing.  -->
-<!-- These are $O(h)$ and $O(h^2)$ respectively. -->
+# Make the number 4 in a smart way
+x <- create_ADnum(4)
+x
 
-<!-- ### Analyse this method in comparison with FD and CD (theoretically and practically on specific examples) -->
+# construct a custom print function for the 'ADnum' class
+print.ADnum <- function(x, ...) {
+  cat('value = ', x$val,
+      ' and deriv = ', x$deriv, '\n', sep = '')
+  return(invisible(x))
+}
+x
+```
 
-<!-- ### What are the advantages and disadvantages of the different finite difference methods? -->
-<!-- When we use more point to calculate the derivative we get a smaller truncation error thus allowing us to use a smaller value for $h$. -->
-<!-- The disadvantage is that the function needs to be evaluated in more points which could be expensive. -->
-<!-- Therefore the choice of method depends on the specific problem. -->
+R knows how to calculate with regular numbers, but cannot yet calculate using number from the "ADnum" class.
+For R to be able to do that we need to do what is known as operator overloading.
 
+```{r operator_overloading}
+Ops.ADnum <- function(e1, e2) {
+  # Convert the first number to ADnum
+  if (.Method[1] == '') {
+    e1 <- create_ADnum(e1, 0)
+  }
+  # Convert the second number to ADnum
+  if (.Method[2] == '') {
+    e2 <- create_ADnum(e2, 0)
+  }
+  
+  if (.Generic == '*') {
+    return(create_ADnum(e1$val * e2$val, e1$deriv*e2$val + e2$deriv*e1$val))
+  }
+  
+  if (.Generic == '+') {
+    return(create_ADnum(e1$val + e2$val, e1$deriv + e2$deriv))
+  }
+  
+  if (.Generic == '-') {
+    return(create_ADnum(e1$val - e2$val, e1$deriv - e2$deriv))
+  }
+  
+  if (.Generic == '/') {
+    return(create_ADnum(e1$val / e2$val, (e1$deriv*e2$val - e1$val*e2$deriv)/e2$val^2))
+  }
+  
+  stop("Function '", Generic, "' not yet implemented for ADnum")
+}
 
+Math.ADnum <- function(x, ...) {
+  if (.Generic == "cos") {
+    return(create_ADnum(cos(x$val), x$deriv * -sin(x$val)))
+  } else if (.Generic == "sin") {
+    return(create_ADnum(sin(x$val), x$deriv * cos(x$val)))
+  } else if (.Generic == "exp") {
+    return(create_ADnum(exp(x$val), x$deriv * exp(x$val)))
+  }
+  stop("Function '", .Generic, "' not yet implemented for Ad num")
+}
+```
+
+Using the example from earlier we will now check that using our implementation we will in fact gain the same result.
+
+```{r}
+x <- create_ADnum(1); cos(x + 2)*3
+```
+
+We do in fact get the same result using our implementation of algorithmic differentiation.
 \newpage
