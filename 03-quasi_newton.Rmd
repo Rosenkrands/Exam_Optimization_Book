@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 # Quasi Newton
 Recall that the newton method uses the hessian to minimize the objective function.
 On the contrary quasi-Newton methods uses an approximation of the true Hessian.
@@ -20,5 +25,37 @@ is used as the search direction and the new iterate is
 \begin{align}
   x_{k + 1} = x_k + \alpha_k p_k,
 \end{align}
-where $\alpha_k$ is the step length
+where $\alpha_k$ is the step length.
+
+Computing $B_k$ at each iteration is expensive, therefore we update it iteratively using the curvature from the most recent step.
+At a new iterate $x_{k + 1}$ construct a new quadratic model of the form
+\begin{align}
+  m_{k + 1}(p) = f_{k + 1} + \nabla f_{k + 1}^{\top} + \frac{1}{2}p^{\top}B_kp.
+\end{align}
+A reasonable requirement to $B_{k + 1}$, based on the knowledge gained during the latest step, is that $\nabla m_{k + 1}(p) = \nabla f_{k + 1} + B_{k + 1}p$ at both $x_k$ and $x_{k + 1}$.
+As $\nabla m_{k + 1}(0) = \nabla f_{k + 1}$, the second condition is always satisfied.
+The first condition can be written as
+\begin{align}
+  \nabla m_{k + 1}(-\alpha_k p_k) = \nabla f_{k + 1} - \alpha_k B_{k + 1} p_k = \nabla f_k.
+\end{align}
+By rearranging, we obtain
+\begin{align}\label{eq:first_condition}
+  B_{k + 1}\alpha_kp_k=\nabla f_{k + 1} - \nabla f_k,
+\end{align}
+to simplify the expression we introduce the notation
+\begin{align}
+  s_k = x_{k + 1} - x_k = \alpha p_k, \quad y_k = \nabla f_{k + 1} - \nabla f_k.
+\end{align}
+This lets us rewrite \eqref{eq:first_condition} as
+\begin{align}\label{first_condition_alternative}
+  B_{k + 1}s_k = y_k.
+\end{align}
+This formula is also known as the secant equation.
+In other words we can say that the symmetric positive definite matrix $B_{k + 1}$ must map $s_k$ into $y_k$.
+This is only possible if $s_k$ and $y_k$ satisfy the curvature condtion $s_k^{\top}y_k > 0$ as we have $s_k^{\top}B_{k + 1}s_k = s_k^{\top}y_k$ by multiplying \eqref{first_condition_alternative} with $s_k^{\top}$.
+The equation is satisfied when $f$ is strongly convex, for any two $x_k$ and $x_{k + 1}$.
+This will not always hold for nonconvex functions but can be enforced explicitly by choosing a step length $\alpha$ that satisfy the Wolfe or Strong Wolfe conditions.
+When the curvature condition is met, the secant equation will have an infinite number of solution.
+To choose $B_{k+1}$ uniquely we add the additional constraint: Among all of the symmetric matrices satisfying the secant equation, choose the $B_{k + 1}$ closest to the current matrix $B_k$.
+
 \newpage
