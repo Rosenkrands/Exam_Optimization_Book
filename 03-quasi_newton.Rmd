@@ -58,4 +58,141 @@ This will not always hold for nonconvex functions but can be enforced explicitly
 When the curvature condition is met, the secant equation will have an infinite number of solution.
 To choose $B_{k+1}$ uniquely we add the additional constraint: Among all of the symmetric matrices satisfying the secant equation, choose the $B_{k + 1}$ closest to the current matrix $B_k$.
 
+The additional constraint corresponds to solving the problem
+\begin{align}\label{eq:DFP_problem}
+  \underset{B}{\min}\|B - B_k\|,
+\end{align}
+subject to
+\begin{align}
+  B = B^\top, \quad B_{s_k} = y_k,
+\end{align}
+where $s_k$ satisfies the secant equation and $B_k$ is symmetric and positive definite.
+
+The BFGS updating formula can be derived with just a slight modification in the above argumentation, instead of imposing conditions on the Hessian approximations $B_k$, we impose similar conditions on their inverses giving by $H_k$.
+The updated approximation must be symmetric and positive definite, and must satisfy the secant equation, now written as
+\begin{align}
+  H_{k + 1}y_k = s_k.
+\end{align}
+The condition of closeness to $H_k$ is now specified by the follwoing analogue of \eqref{eq:DFP_problem}
+\begin{align}
+  &\underset{H}{\min}\|H - H_k\|, \\
+  &\text{subject to} \quad H = H^\top, \quad H_{s_k} = y_k.
+\end{align}
+A norm that allows easy solution of the minimization problem is the weighted Frobenius norm
+\begin{align}
+  \|A\|_W = \|W^{1/2}AW^{1/2}\|_F \quad \text{with the defintion of $\|\cdot\|_F$ as } \|C\|^2_F = \sum_{i = 1}^n\sum_{j = 1}^nc_{ij}^2. 
+\end{align}
+Note that $W$ can be chosen as any matrix satisfying the equation $Ws_k = y_k$.
+
+The unique solution $H_{k + 1}$ to the minimization problem is given by
+\begin{align}
+  \text{(BFGS)} \qquad H_{k + 1} = (I - \rho_ks_ky_k^\top)H_k(I - \rho_ky_ks_k^\top) + \rho_ks_ks_k^\top,
+\end{align}
+with $\rho_k$ defined as
+\begin{align}
+  \rho_k = \frac{1}{y_k^\top s_k}.
+\end{align}
+
+### Choosing the initial approximation
+There is no magic formula to choose the initial approximation $H_0$.
+One could choose to make a finite difference approximation of the Hessian and then invert this approximation.
+Another approach is just to set it equal to the identity matrix, or a multiple of the identity that reflects the scaling of the problem.
+
+## Implementation of BFGS
+Below is an implementation of the BFGS method, the initial approximation $H_0$ is set to the identity matrix and the step length is set to be $1$.
+Although it could be beneficial to choose a step length that satisfy the Wolfe or Strong Wolfe conditions as mentioned above, we will see that BFGS will work even if the conditions are not satisfied.
+Firstly we will define an objective function to test the BFGS on, we will use the Rosenbrock function.
+
+```{r objective_function}
+# to determine convergence
+norm2 <- function(x) norm(as.matrix(x), type = "2")
+
+# objective function
+f <- function(x) 0.5*(100*x[1]^2 + x[2]^2)
+f_xy <- function(x,y) 0.5*(100*x^2 + y^2)
+x_min_true <- c(0, 0)
+
+# analytic derivatives
+g <- function(x) c(0.5*200*x[1], 0.5*2*x[2])
+H <- function(x) 0.5*rbind(c(200, 0), c(0, 2))
+```
+
+Now we will implement the BFGS method
+
+```{r BFGS_method}
+BFGS <- function(x_0) {
+  x_k <- x_0
+  tolerance <- 1e-10
+  I <- rbind(c(1,0),c(0,1))
+  h_k <- I
+  k <- 0
+  k_max <- 10000
+  while (norm2(g(x_k)) >= tolerance & k < k_max) {
+    x_k_old <- x_k
+    g_k <- g(x_k)
+    g_k_old <- g(x_k_old)
+    p_k <- -h_k %*% g_k
+    a_k <- 1
+    x_k <- x_k + a_k * p_k
+    g_k <- g(x_k)
+    s_k <- x_k - x_k_old
+    y_k <- g_k - g_k_old
+    rho_k <- as.numeric(1/(t(y_k)%*%s_k))
+    h_k <- {(I - rho_k * s_k %*% t(y_k)) %*% h_k %*% 
+      (I - rho_k * y_k %*% t(s_k)) + rho_k * s_k %*% t(s_k)}
+    k <- k + 1
+  }
+  cat('number of iterations:', '\t',  k, '\n')
+  return(x_k)
+}
+```
+
+We can now give an initial value and try the BFGS function
+
+```{r comparing_methods}
+x_0 <- c(1,1.5)
+BFGS(x_0)
+```
+
+The BFGS method reaches convergence after 4 iterations.
+Comparing this to the earlier implementation of gradient descent gives
+
+```{r}
+strong_wolfe_gd(f,g,x_0,tol_grad_f = 1e-10)
+```
+
+Thus we can conclude that on this problem the BFGS uses considerably less iterations, even with a step length not satisfiying the the Wolfe or strong Wolfe conditions.
+
+```{r include = F}
+library(microbenchmark)
+bench <- microbenchmark(BFGS = BFGS(x_0),
+                        GD = strong_wolfe_gd(f,g,x_0,tol_grad_f = 1e-10, output = FALSE),
+                        times = 10)
+library(dplyr)
+bench <- bench %>%
+  group_by(expr) %>%
+  summarise(mean_time = mean(time)/1e+4)
+```
+
+Using `microbenchmark` we can see how much time it took to perform the iterations.
+As every iteration in the BFGS algorithm is more expensive than in the gradient descent, the latter might still be faster.
+However as we can see in the following plot, this is not the case.
+
+```{r plotting_the_results_BFGS, echo = F, fig.height=3, fig.width=8}
+library(ggplot2)
+ggplot(bench) + 
+  geom_col(aes(x = expr, y = mean_time), width = 0.5, fill = 'darkblue') +
+  scale_y_continuous(trans = 'log10') +
+  xlab('') + ylab('Mean time (log10 scale)') + ggtitle('Comparing test results') +
+  theme_minimal()
+```
+
+## Derivative free optimisation
+we can now compare that to the `optim` functions implementation of 'Nelder-Mead', which is a derivative free optimisation algorithm
+
+```{r}
+optim(x_0, f, method = 'Nelder-Mead')$counts[1]
+```
+
+
 \newpage
