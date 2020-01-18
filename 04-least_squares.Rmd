@@ -1,3 +1,10 @@
 # Least Squares
-
+In least-squares problems, the objective have the following special form:
+\begin{align}
+  f(x) = \frac{1}{2}\sum_{j = 1}^m r^2_j(x).
+\end{align}
+We call $r_j$ a residual.
+Furthermore we now that it is a smooth function from $\mathbb{R}^n$ to $\mathbb{R}$.
+The special form of $f$ makes this particular type of problem easier to solve than general unconstrained minimization problems.
+We will start by assembling the individual components $r_j$ into a residual vector
 \newpage
