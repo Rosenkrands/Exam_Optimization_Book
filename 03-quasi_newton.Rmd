@@ -101,7 +101,7 @@ Another approach is just to set it equal to the identity matrix, or a multiple o
 ## Implementation of BFGS
 Below is an implementation of the BFGS method, the initial approximation $H_0$ is set to the identity matrix and the step length is set to be $1$.
 Although it could be beneficial to choose a step length that satisfy the Wolfe or Strong Wolfe conditions as mentioned above, we will see that BFGS will work even if the conditions are not satisfied.
-Firstly we will define an objective function to test the BFGS on, we will use the Rosenbrock function.
+Firstly we will define an objective function to test the BFGS on, we will use a convex elliptical objective function.
 
 ```{r objective_function}
 # to determine convergence
@@ -186,6 +186,80 @@ ggplot(bench) +
   xlab('') + ylab('Mean time (log10 scale)') + ggtitle('Comparing test results') +
   theme_minimal()
 ```
+
+### Inverse Hessian approximations
+In this section we will investigate how well the Hessian is approximated in the BFGS algorithm.
+The following `chunk` is a modified version of the BFGS implementation from earlier.
+It has the added functionality that it saves the analytical Hessian and the approximated Hessian for each iteration.
+
+```{r}
+BFGS2 <- function(x_0, print = TRUE) {
+  x_k <- x_0
+  tolerance <- 1e-10
+  I <- rbind(c(1,0),c(0,1))
+  h_k <- I
+  k <- 0
+  k_max <- 10000
+  #Create empty lists for matricies
+  Hessian <- c()
+  Truehessian <- c()
+  while (norm2(g(x_k)) >= tolerance & k < k_max) {
+    x_k_old <- x_k
+    g_k <- g(x_k)
+    g_k_old <- g(x_k_old)
+    p_k <- -h_k %*% g_k
+    a_k <- 1
+    x_k <- x_k + a_k * p_k
+    g_k <- g(x_k)
+    s_k <- x_k - x_k_old
+    y_k <- g_k - g_k_old
+    rho_k <- as.numeric(1/(t(y_k)%*%s_k))
+    h_k <- {(I - rho_k * s_k %*% t(y_k)) %*% h_k %*% 
+        (I - rho_k * y_k %*% t(s_k)) + rho_k * s_k %*% t(s_k)}
+    k <- k + 1
+    Truehessian[[k]] <- solve(H(x_k))
+    Hessian[[k]] <- h_k
+    if (print == TRUE) {
+      cat('Approximated inverse hessian:' , '\t' , h_k , '\n')
+      cat('Analytical inverse hessian:' , '\t' , solve(H(x_k)) , '\n')  
+    }
+  }
+  Hes_list <- list(Hessian, Truehessian)
+  if (print == TRUE) {
+    cat('number of iterations:', '\t',  k, '\n')
+  }
+  return(Hes_list)
+}
+Hes_list2 <- BFGS2(c(1,2))
+```
+
+The following plot shows the difference for each entry between the approximated and analytical Hessian.
+
+```{r echo = F, fig.height=5, fig.width=8}
+indgang.1.1 <- rep(NA_real_, 4)
+indgang.1.2 <- rep(NA_real_, 4)
+indgang.2.1 <- rep(NA_real_, 4)
+indgang.2.2 <- rep(NA_real_, 4)
+for (i in 1:4) {
+  indgang.1.1[i] <- abs(BFGS2(c(1,2), 
+                      print = F)[[2]][[i]][1,1] - BFGS2(c(1,2), print = F)[[1]][[i]][1,1])
+  indgang.1.2[i] <- abs(BFGS2(c(1,2), 
+                      print = F)[[2]][[i]][1,2] - BFGS2(c(1,2), print = F)[[1]][[i]][1,2])
+  indgang.2.1[i] <- abs(BFGS2(c(1,2), 
+                      print = F)[[2]][[i]][2,1] - BFGS2(c(1,2), print = F)[[1]][[i]][2,1])
+  indgang.2.2[i] <- abs(BFGS2(c(1,2), 
+                      print = F)[[2]][[i]][2,2] - BFGS2(c(1,2), print = F)[[1]][[i]][2,2])
+}
+par(mfrow=c(2,2))
+plot(1:4, indgang.1.1, type = 'l', xlab = '')
+plot(1:4, indgang.1.2, type = 'l', xlab = '')
+plot(1:4, indgang.2.1, type = 'l', xlab = '')
+plot(1:4, indgang.2.2, type = 'l', xlab = '')
+```
+
+They are very similar, even from the first iteration. 
+The approximation is therefore practically identical to the analytical Hessian.
+For 3 of the entries the difference even shrinks after the 4 iterations.
 
 ## Nelder-Mead
 A popular derivative free optimization method is the Nelder-Mead method.
