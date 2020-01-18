@@ -187,12 +187,35 @@ ggplot(bench) +
   theme_minimal()
 ```
 
-## Derivative free optimisation
-we can now compare that to the `optim` functions implementation of 'Nelder-Mead', which is a derivative free optimisation algorithm
+## Nelder-Mead
+A popular derivative free optimization method is the Nelder-Mead method.
+At any given point it keeps track of $n + 1$ points of interest in $\mathbb{R}^n$.
+In a single iteration of the Nelder-Mead algorithm we seek to remove the matrix with the worst function value and replace it with another point with a better value.
+The new point is found be either reflecting, expanding or contracting the simplex along the line joining the worst vertex with the centroid of the remaining vertices.
+If we cannot find a better point in this manner, we retain only the vertex with the best function value, and we shrink the simplex by moving all other vertices toward this value.
 
-```{r}
-optim(x_0, f, method = 'Nelder-Mead')$counts[1]
+We can now compare that to the `optim` functions implementation of 'Nelder-Mead', which is a derivative free optimisation algorithm with their implementation of BFGS.
+
+```{r include = F}
+library(microbenchmark)
+bench <- microbenchmark(BFGS = optim(x_0, f, method = 'BFGS'),
+                        NM = optim(x_0, f, method = 'Nelder-Mead'),
+                        times = 50)
+library(dplyr)
+bench <- bench %>%
+  group_by(expr) %>%
+  summarise(mean_time = mean(time)/1e+4)
 ```
 
+```{r plotting_the_results_BFGS_NM, echo = F, fig.height=3, fig.width=8}
+library(ggplot2)
+ggplot(bench) + 
+  geom_col(aes(x = expr, y = mean_time), width = 0.5, fill = 'darkblue') +
+  scale_y_continuous() +
+  xlab('') + ylab('Mean time') + ggtitle('Comparing test results') +
+  theme_minimal()
+```
+
+We conclude that the BFGS algorithm is faster than Nelder-Mead, however Nelder-Mead has the advantage that we don't have to provide the gradient.
 
 \newpage
