@@ -5,7 +5,7 @@ output:
 ---
 # Calculating derivatives
 Many numerical optimization algorithms use the gradient to minimize the respective objective function.
-However sometimes it can be time-consuming if the objective function is complicated.
+However sometimes it can be time consuming if the objective function is complicated.
 Therefore it would beneficial to have the algortihm calculate the derivative automatically.
 There are several different approaches that could be taken.
 The first approach we will consider is called finite differencing.
