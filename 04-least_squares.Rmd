@@ -6,5 +6,19 @@ In least-squares problems, the objective have the following special form:
 We call $r_j$ a residual.
 Furthermore we now that it is a smooth function from $\mathbb{R}^n$ to $\mathbb{R}$.
 The special form of $f$ makes this particular type of problem easier to solve than general unconstrained minimization problems.
-We will start by assembling the individual components $r_j$ into a residual vector
+
+## Linear least-squares problems
+If the model $\phi(x;t_j)$ is a linear function of $x$ what we have is a linear least-squares problem.
+The residual is given by $r(x) = Jx - y$, where we call $J$ the design matrix.
+The objective function becomes
+\begin{align}
+  f(x) = \frac{1}{2}\|Jx - y\|^2.
+\end{align}
+
+
+<!-- We will start by assembling the individual components $r_j$ into a residual vector $r : \mathbb{R}^n \rightarrow \mathbb{R}$, as follows -->
+<!-- \begin{align} -->
+<!--   r(x) = \left( r_1(x),r_2(x),\ldots,r_m(x) \right)^\top. -->
+<!-- \end{align} -->
+
 \newpage
