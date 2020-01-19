@@ -40,6 +40,23 @@ So to solve this unconstrained linear least squares problem, is equivalent to so
 
 ## Algorithms for solving
 There are three major algortihms for solving linear least squares problem, which we will present in this chapter.
+Furthermore for every method we will present an implementation in `R` and compare the performance of the different methods.
+
+For testing purposes we will use the `cars` dataset which we will now import.
+
+```{r import_cars_dataset}
+spd <- cars$speed
+dst <- cars$dist
+```
+
+We will then define the design matrix using the `cars` data.
+
+```{r}
+j.1 <- rep(1, length(spd))
+j.2 <- spd
+J <- cbind(j.1, j.2)
+y <- dst
+```
 
 ### Cholesky / Normal equations
 We start out by noting that
@@ -48,8 +65,153 @@ We start out by noting that
 \end{align}
 as $Jz \neq 0$ when we assume that $J$ has full column rank.
 This implies that $J^\top J$ is positive definite.
-Therefore we can use Cholesky to factorise the design matrix $J$ to lower triangular $L$ and $L$'s conjugate transpose, $\overline{L}^\top$.
+Therefore we can use Cholesky to factorise a matrix $A$ to lower triangular $L$ and $L$'s conjugate transpose, $\overline{L}^\top$.
 Then solving the equations with a triangular would be easy by back substitution.
+
+We can rephrase the problem by replacing
+\begin{align}
+  &J^\top Jx^* - J^\top y \ \text{with} \ Ax = b \\
+  &\text{where} \ A = J ^\top J \ \text{and} \ b = J^\top y.
+\end{align}
+We can then use the following three step procedure to solve the system
+\begin{itemize}
+  \item compute the coefficient matrix $A = J^\top J$;
+  \item compute the cholesky factorization of the symmetric matrix $J^\top J$;
+  \item perform two triangular substitutions with the Cholesky factors to recover the solution $x^*$.
+\end{itemize}
+The two triangular substitutions are as follows
+\begin{align}
+  &\text{solve for $z$:} \ Lz = b \\
+  &\text{solve for $x$:} \ L^\top x = z.
+\end{align}
+
+Below is a implementation of the procedure.
+
+```{r}
+# Compute A matrix by multiplying the transpose of J with J 
+A <- t(J)%*%J
+# Using the chol function to find the upper triangular cholesky factorization
+U <- chol(A)
+L <- t(chol(A))
+# Computing the left side of the equation, by multiplying x transpose with y
+b <- t(J)%*%y
+# Using first the forwardsolve to find z
+z <- forwardsolve(L, b)
+# Hereafter using backsolve to find the coefficients
+chol_coef <- backsolve(U, z)
+# We can make a chol function for testing purposes
+chol.est <- function(J) {
+  A <- t(J)%*%J
+  U <- chol(A)
+  L <- t(U)
+  b <- t(J)%*%y
+  z <- forwardsolve(L, b)
+  chol_coef <- backsolve(U, z)
+  return(chol_coef)
+}
+chol.est(J)
+```
+
+### QR
+Another method is using $QR$ factorization.
+We can decompose $J = QR$ for orthogonal $Q$ and upper triangular $R$.
+Assuming $J$ is square we have
+\begin{align*}
+  x^* &= \left(J^\top J\right)^{-1}J^\top y = \left(\left(QR\right)^\top\left(QR\right)\right)^{-1}\left(QR\right)^\top y\\
+  &= \left(R^\top Q^\top Q R\right)^{-1}R^\top Q^\top y \\
+  &= \left(R^\top R\right)^{-1} R^\top Q^\top y \\
+  &= R^{-1}(R^\top)^{-1}R^\top Q^\top y \\
+  &= R^{-1}Q^\top y.
+\end{align*}
+Therefore we can solve least squares by solving
+\begin{align}
+  Rx^* = Q^\top y
+\end{align}
+using back substitution as $R$ is triangular.
+
+Below is an implementation of the procedure.
+
+```{r}
+# First we make the qr decomposition
+QR <- qr(J)
+# Then we utilize functions qr.Q and qr.R to extract the corresponding matrices
+Q <- qr.Q(QR)
+R <- qr.R(QR)
+# As the equation we want to solve is Rx*=Q^T*y and R 
+# is upper triangular we can use the backsolve function
+QR_coef <- backsolve(R, t(Q)%*%y)
+# We can now make a QR function for testing purposes
+qr.est <- function (J) {
+  A <- t(J)%*%J
+  QR <- qr(J)
+  Q <- qr.Q(QR)
+  R <- qr.R(QR)
+  backsolve(R, t(Q)%*%y)
+  QR_coef <- backsolve(R, t(Q)%*%y)
+  return(QR_coef)
+}
+qr.est(J)
+```
+
+### SVD
+This third approach is based on the singular-value decomposition of $J$, it argues that $J = USV^\top$ for orthogonal $U$, $V$ and diagonal $S$.
+It describes the effect of a matrix on a vector $Jx = USV^\top x$ as
+\begin{itemize}
+  \item a rotation/reflection in the input space ($V^\top$)
+  \item a scaling that takes a vector in the input space to the output space $S$
+  \item another rotation/reflection in the output space ($U$)
+\end{itemize}
+Assuming $J$ is square we have
+\begin{align*}
+  x^* &= \left(J^\top J\right)^{-1} J^\top y \\
+  &= \left((USV^\top)^\top (USV^\top)\right)^{-1} (USV^\top)^\top y \\
+  &= \left((VSU^\top) (USV^\top)\right)^{-1} (VSU^\top)y \\
+  &= \left(VS^2V^\top\right)^{-1}(VSU^\top)y \\
+  &= (V^\top)^{-1}S^{-2}V^{-1} (VSU^\top)y = (V^\top)^{-1} S^{-1}U^\top y \\
+  &= VS^{-1}U^\top y.
+\end{align*}
+When $m > n$, similar to $QR$, then
+\begin{align}
+  x^* = VS^{-1}U^\top y
+\end{align}
+
+Below is an implementation of the procedure.
+
+```{r}
+# Perform SVD decomposition
+svd. <- svd(x)
+# Extract the three matrices from the decomposition
+S <- diag(svd.$d)
+U <- svd.$u
+V <- svd.$v
+# Solve the equation
+svd_coef <- V%*%solve(S)%*%t(U)%*%y
+# We can now make an SVD function for testing purposes
+svd.est <- function (J) {
+  svd. <- svd(J)
+  S <- diag(svd.$d)
+  U <- svd.$u
+  V <- svd.$v
+  svd_coef <- V%*%solve(S)%*%t(U)%*%y
+  return(svd_coef)
+}
+```
+
+## Comparison of the algortihms
+The Cholesky based algorithm is particularly useful when $n < m$ and it is practical to store $J^\top J$ but not $J$ itself.
+However the method can degrade if $J$ is ill-conditioned.
+The QR based algortihm avoids squaring of the condition number and hence may be more robust that the Cholesky based method.
+The SVD approach is the most robust of the three and even reveals information about the sesitivity of the solution to pertubation in the data.
+
+We can now compare the performance of the three implementations.
+
+```{r}
+library(microbenchmark)
+microbenchmark(Cholesky = chol.est(), 
+               QR = qr.est(), 
+               SVD = svd.est(), 
+               times = 1000)
+```
 
 
 <!-- We will start by assembling the individual components $r_j$ into a residual vector $r : \mathbb{R}^n \rightarrow \mathbb{R}$, as follows -->
