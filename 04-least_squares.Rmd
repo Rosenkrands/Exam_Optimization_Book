@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 # Least Squares
 In least-squares problems, the objective have the following special form:
 \begin{align}
@@ -11,9 +16,40 @@ The special form of $f$ makes this particular type of problem easier to solve th
 If the model $\phi(x;t_j)$ is a linear function of $x$ what we have is a linear least-squares problem.
 The residual is given by $r(x) = Jx - y$, where we call $J$ the design matrix.
 The objective function becomes
-\begin{align}
+\begin{align}\label{eq:objective_function}
   f(x) = \frac{1}{2}\|Jx - y\|^2.
 \end{align}
+The derivative and second derivative is given by
+\begin{align}
+  \nabla f(x) &= J^\top\left(Jx - y\right) \\
+  \nabla^2 f(x) &= J^\top J.
+\end{align}
+The objective function \eqref{eq:objective_function} is convex and therefore theorem 2.5 states that: any $x^* \ : \ \nabla f(x^*) = 0$ also the global minimizer of $f$.
+
+Knowing this we can deduce that
+\begin{align}
+  \nabla f(x) &= J^\top\left(Jx - y\right) \ \text{and} \ \nabla f(x^*) = 0 \\
+  0 &= f(x^*) = J^\top\left(Jx^* - y\right) = J^\top Jx^* - J^\top y.
+\end{align}
+This means that $x^*$ satisfies the linear system of equations
+\begin{align}\label{eq:normal_equations}
+  J^\top Jx^* - J^\top y,
+\end{align}
+which are also known as the normal equations.
+So to solve this unconstrained linear least squares problem, is equivalent to solving the set of normal equations given by \eqref{eq:normal_equations}.
+
+## Algorithms for solving
+There are three major algortihms for solving linear least squares problem, which we will present in this chapter.
+
+### Cholesky / Normal equations
+We start out by noting that
+\begin{align}
+  z^\top J^\top J z = \left(Jz\right)^\top Jz = \|Jz\|^2 > 0
+\end{align}
+as $Jz \neq 0$ when we assume that $J$ has full column rank.
+This implies that $J^\top J$ is positive definite.
+Therefore we can use Cholesky to factorise the design matrix $J$ to lower triangular $L$ and $L$'s conjugate transpose, $\overline{L}^\top$.
+Then solving the equations with a triangular would be easy by back substitution.
 
 
 <!-- We will start by assembling the individual components $r_j$ into a residual vector $r : \mathbb{R}^n \rightarrow \mathbb{R}$, as follows -->
