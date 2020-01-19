@@ -195,7 +195,7 @@ svd.est <- function (J) {
 }
 ```
 
-## Comparison of the algortihms
+## Comparison of the algorithms
 The Cholesky based algorithm is particularly useful when $n < m$ and it is practical to store $J^\top J$ but not $J$ itself.
 However the method can degrade if $J$ is ill-conditioned.
 The QR based algortihm avoids squaring of the condition number and hence may be more robust that the Cholesky based method.
@@ -229,5 +229,50 @@ We can conclude that in our case there is a positive relationship between robust
 The Cholesky approach which is theoretically the least stable have the best performance, while the SVD approach which is theoretically the most stable have the worst performance if we disregard our implementaion of the QR method.
 comparing the two QR implementations the built-in have an advantage when compared to our implementation.
 We suspect that the discrepancy can be explained by our implementation doing some work twice.
+
+## Non-linear least squares
+In the case of a non-linear objective function one might utilize the Gauss-Newton method to find a solution.
+However in the case of NLS the objective function is not convex, and it can therefore be difficult to find a solution.
+The Gauss-Newton method can be viewed as a modified Newton's method with line search.
+It solves the following system to find the search direction $p_k^{GN}$:
+\begin{align*}
+  J_k^\top J_k p_k^{GN} = -J_k^\top r_k.
+\end{align*}
+
+Below is an implementation of the method.
+
+```{r}
+# Simulate data
+x <- seq(-2*pi, 2*pi, 0.1)
+e <- rnorm(length(x), sd = 0.2)
+true.b <- c(1,1)
+y <- true.b[1]*sin(x*true.b[2]) + e
+
+# Define functions and derivatives
+f <- function(x, b) {b[1]%*%sin(b[2]%*%x)}
+df.1 <- function(x, b) {sin(b[2]%*%x)}
+df.2 <- function(x, b) {x%*%cos(b[2]%*%x)}
+
+# gauss-newton implementation
+gauss_newton <- function(b, x, y, f, df.1, df.2, anim, max_it = 10) {
+  m <- length(x)
+  n <- length(b)
+  J <- matrix(nrow = m, ncol = n)
+  for (i in 1:m) {
+    J[i,1] <- df.1(x[i], b)
+    J[i,2] <- df.2(x[i], b)
+  }
+  for (i in 1:max_it) {
+    b <- b - solve(t(J)%*%J) %*% t(J) %*% t(f(x, b) - y)
+    for (i in 1:m) {
+      J[i,1] <- df.1(x[i], b)
+      J[i,2] <- df.2(x[i], b)
+    }
+  }
+  return(b)
+}
+gauss_newton(c(.5,.5), x, y, f, df.1, df.2, anim = TRUE, max_it = 1000)
+```
+
 
 \newpage
