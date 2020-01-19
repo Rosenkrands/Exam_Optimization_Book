@@ -229,9 +229,5 @@ We can conclude that in our case there is a positive relationship between robust
 The Cholesky approach which is theoretically the least stable have the best performance, while the SVD approach which is theoretically the most stable have the worst performance if we disregard our implementaion of the QR method.
 comparing the two QR implementations the built-in have an advantage when compared to our implementation.
 We suspect that the discrepancy can be explained by our implementation doing some work twice.
-<!-- We will start by assembling the individual components $r_j$ into a residual vector $r : \mathbb{R}^n \rightarrow \mathbb{R}$, as follows -->
-<!-- \begin{align} -->
-<!--   r(x) = \left( r_1(x),r_2(x),\ldots,r_m(x) \right)^\top. -->
-<!-- \end{align} -->
 
 \newpage
