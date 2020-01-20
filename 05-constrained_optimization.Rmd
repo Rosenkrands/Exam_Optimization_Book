@@ -217,4 +217,99 @@ Next we find the mean
 \end{align*}
 This tells us that the weights must sum to one.
 
-## Task 3
+### Part 3
+In statistics we often wish to find a parameter estimate, that is unbiased and have the lowest possible variance. 
+We wish to choose $p$ so $\tilde{y}$ have mean value $\mu$ and lowest possible variance. 
+Solve the problem using the Lagrange multiplier method.
+
+The problem can be formulated as the following Lagrange function
+\begin{align*}
+    L = \sum_i p_i^2 v_i^2 - \lambda(\sum_i p_i - 1)
+\end{align*}
+Setting the partial derivatives equal to zero yields
+\begin{align*}
+    \frac{\partial L}{\partial p_i} = 2p_i v_i^2 -\lambda = 0 \\
+    \frac{\partial L}{\partial \lambda} = -\sum_i p_i + 1 = 0.
+\end{align*}
+Thus we have a system of $k+1$ equations with $k+1$ unknowns.
+For $k=3$ we get the following system
+\begin{align*}
+    \begin{bmatrix}
+        2 v_1^2 & 0 & 0 & -1 & 0 \\
+        0 & 2v_2^2 & 0 & -1 & 0 \\
+        0 & 0 & 2v_3^2 & -1 & 0 \\
+        1 & 1 & 1 & 0 & 1
+    \end{bmatrix}
+    & \sim
+    \begin{bmatrix}
+        1 & 0 & 0 & \frac{-1}{2v_1^2} & 0 \\
+        0 & 1 & 0 & \frac{-1}{2v_2^2} & 0 \\
+        0 & 0 & 1 & \frac{-1}{2v_3^2} & 0 \\
+        0 & 0 & 0 & \frac{1}{2v_1^2} + \frac{1}{2v_2^2} + \frac{1}{2v_3^2} & 1
+    \end{bmatrix} \\
+    & \sim 
+    \begin{bmatrix}
+        1 & 0 & 0 & 0 & \frac{\frac{1}{2v_1^2}}{\frac{1}{2v_1^2} + \frac{1}{2v_2^2} + \frac{-1}{2v_3^2}} \\
+        0 & 1 & 0 & 0 & \frac{\frac{1}{2v_2^2}}{\frac{1}{2v_1^2} + \frac{1}{2v_2^2} + \frac{1}{2v_3^2}} \\
+        0 & 0 & 1 & 0 & \frac{\frac{1}{2v_3^2}}{\frac{1}{2v_1^2} + \frac{1}{2v_2^2} + \frac{1}{2v_3^2}} \\
+        0 & 0 & 0 & 1 & \frac{1}{\frac{1}{2v_1^2} + \frac{1}{2v_2^2} + \frac{1}{2v_3^2}}
+    \end{bmatrix}.
+\end{align*}
+From this we get the equations
+\begin{align*}
+    \lambda &= \frac{1}{\frac{1}{2v_1^2} + \frac{1}{2v_2^2} + \frac{1}{2v_3^2}} \\
+    p_i &= \frac{1}{2v_i^2} \lambda = \frac{\frac{1}{v_i^2}}{\sum_i \frac{1}{v_i^2}}
+\end{align*}
+The same solution applies for arbitrary values of $k\in\mathbb{N}$.
+
+## Task 4
+Consider a linear regression model of the form
+\begin{align*}
+  y_i = \beta_0 + \beta_1 x_i + e_i,
+\end{align*}
+with the constraint $\beta_1 > 0$.
+In the chunk below we formulate and solve the problem using the `cars` dataset and the `CVXR` package.
+
+```{r}
+suppressWarnings(library(CVXR, warn.conflicts = FALSE))
+p <- 2
+X <- cbind(rep(1,length(cars$speed)),cars$speed)
+Y <- cars$dist
+betaHat <- Variable(p)
+objective <- Minimize(sum((Y - X %*% betaHat)^2))
+problem.1 <- Problem(objective)
+problem.2 <- Problem(objective, constraints = list(betaHat[2] >= 0))
+result.1 <- solve(problem.1)
+result.2 <- solve(problem.2)
+```
+
+Below we extract the coefficients from the two formulations
+
+```{r}
+coef.1 <- result.1$getValue(betaHat)
+coef.2 <- result.2$getValue(betaHat)
+```
+
+Below is a plot using the coeficients from the two problems.
+
+```{r echo = F}
+plot(cars$speed, cars$dist, xlim = c(0,30), xlab = 'Speed', ylab = 'Distance')
+abline(coef.1[1,1], coef.1[2,1], col = 'green')
+abline(coef.2[1,1], coef.2[2,1], col = 'red')
+```
+
+Next we can explore the problem using the `nls` function with the formulated in such a way that we don't need to impose the constraint.
+
+```{r}
+y <- cars$dist
+x <- cars$speed
+nl.fit.con <- nls(y ~ a + exp(b) * x, start = list(a = 1, b = 1))
+nl.fit <- nls(y ~ a + b * x, start = list(a = 1, b = 1))
+```
+
+Below we can see the summaries form the two regressions.
+
+```{r}
+summary(nl.fit.con)
+summary(nl.fit)
+```
