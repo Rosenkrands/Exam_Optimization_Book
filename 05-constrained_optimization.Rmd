@@ -1,1 +1,151 @@
 # Constrained Optimization
+
+## Task 1
+A boatyard produces three types of boats: cabin cruicers; racing sailboats and cruising sailboats. 
+It takes 2 weeks to produce a cabin cruicer; 1 week to produce a racing sailboats and 3 weeks to produce a cruising sailboat. 
+The boatyard is closed during the last week of December. 
+The profit on each kind of boat is 5000 USD, 4000 USD and 6000 USD. 
+Because of space considerations, the boatyard can finish at most 25 boats in one year (51 weeks).
+
+To find the number of boats of each kind that will maximize the annual profit.
+We wish to maximize the profitfunction.
+\begin{align}
+    Z(x) = 5000x_1 + 4000x_2 + 6000x_3
+\end{align}
+subject to the conditions that
+\begin{align}
+    2x_1 + 1x_2 + 3x_3 &\leq 51\\
+    x_1 + x_2 + x_3 &\leq 25.
+\end{align}
+using the simplex method we find the optimal number of boats in the following way
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{@{}l|lllll|l@{}}
+    \toprule
+     & -5000 & -4000 & -6000 & 0 & 0 &    \\ \midrule
+     & 2     & 1     & 3     & 1 & 0 & 51 \\
+     & 1     & 1     & 1     & 0 & 1 & 25   
+    \end{tabular}
+  \end{center}
+\end{table}
+The last two columns represent the contraints.
+The place where we can maximize profit the most is in the 3rd column.
+We then have to choose whether we want pivot in the first or second row.
+To determine this we divide the last column with the third to see where we have a bottle neck.
+We conclude that the bottle neck is in the 1st row as $51/3 = 17 > 25/1 = 25$.
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{@{}l|lllll|l@{}}
+    \toprule
+     & -4000 & -2000 & 0 & 2000 & 0 &    \\ \midrule
+     & 2/3   & 1/3   & 1 & 1/3  & 0 & 17 \\
+     & 1/3   & 2/3   & 0 & -1/3 & 1 & 8  \\
+    \end{tabular}
+  \end{center}
+\end{table}
+We repeat the procedure again
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{@{}l|lllll|l@{}}
+    \toprule
+     & 0   & 0 & 0 & 1000 & 3000 &    \\ \midrule
+     & 1/2 & 0 & 1 & -1/2 & 0    & 13 \\
+     & 1/2 & 1 & 0 & -1/2 & 3/2  & 12 \\
+    \end{tabular}
+  \end{center}
+\end{table}
+and we get the result
+\begin{align}
+  x_1 = 0, x_2 = 12, x_3 = 13.
+\end{align}
+Inserting in the profitfunction yields
+\begin{align}
+    Z(x) = 12 \cdot 4000 \$ + 13 \cdot 6000 \$ = 126.0000 \$.
+\end{align}
+
+### Altering the constraints
+The owner is looking to increase the profit and is considering various options.
+\begin{itemize}
+  \item Keeping the boatyard open all year round
+  \item Increasing the capacity to 25 boasts
+  \item Keeping the boatyard open all year round and icreasing the capacity to 26 boats
+\end{itemize}
+
+#### 52 weeks and 25 boats
+Below we will use `R` to solve the optimization problem using the same technique as above.
+First we will import the `MASS` library to display fractions for easier interpretation.
+Next we will create a function that can pivot the matrix for a given matrix and pivot position.
+
+```{r}
+library(MASS)
+pivot_matrix <- function(M, pivot){
+  
+  rp <- pivot[1]
+  cp <- pivot[2]
+  z <- (1:nrow(M))[-rp]
+  
+  M[rp,] <- M[rp,] / M[rp, cp]
+  
+  for (i in z){
+    k <- M[i, cp]
+    M[i, ] <- M[i,] - k* M[rp,]
+  }
+  M
+}
+```
+
+We can now construct the matrix that corresponds to the optimization problem.
+
+```{r}
+M <- matrix(c(-5,1,2, -4,1,1, -6,1,3, 0,1,0, 0,0,1, 0,25,52), nr = 3); M
+cp <- 3
+M[-1, 6] / M[-1, cp]
+rp <- 3
+M2 <- pivot_matrix(M, c(rp,cp));fractions(M2)
+cp <- 2
+M2[-1, 6] / M2[-1, cp]
+rp <- 2
+M3 <- pivot_matrix(M2, c(2,2));M3
+```
+
+As we don't suspect anyone to buy half a boat we must choose which number we would round up.
+If we construct 11 of the 2nd type and 14 of the third type we are able to store them but will use `r 11 * 1 + 14 * 3` weeks which we cannot.
+Therefore we choose to construct 12 of the 2nd type and 13 of the 3rd type.
+The profit in this case would amount to `r format(12 * 4000 + 13 * 6000, scientific = F)`.
+Note that will only use `r 12 * 1 + 13 * 3` weeks.
+
+#### 51 weeks and 26 boats
+
+```{r}
+M <- matrix(c(-5,1,2, -4,1,1, -6,1,3, 0,1,0, 0,0,1, 0,26,51), nr = 3); M
+cp <- 3
+M[-1, 6] / M[-1, cp]
+rp <- 3
+M2 <- pivot_matrix(M, c(rp,cp));fractions(M2)
+cp <- 2
+M2[-1, 6] / M2[-1, cp]
+rp <- 2
+M3 <- pivot_matrix(M2, c(2,2));M3
+```
+
+If we construct 13 of the 2nd type and 13 of the third type we are able to store them but will use `r 13 * 1 + 13 * 3` weeks which we cannot.
+Therefore we choose to construct 14 of the 2nd type and 12 of the 3rd type.
+The profit in this case would amount to `r format(14 * 4000 + 12 * 6000, scientific = F)`. 
+Note that we will only use `r 14 * 1 + 12 * 3`
+
+#### 52 weeks and 26 boats
+
+```{r}
+M <- matrix(c(-5,1,2, -4,1,1, -6,1,3, 0,1,0, 0,0,1, 0,26,52), nr = 3); M
+cp <- 3
+M[-1, 6] / M[-1, cp]
+rp <- 3
+M2 <- pivot_matrix(M, c(rp,cp));fractions(M2)
+cp <- 2
+M2[-1, 6] / M2[-1, cp]
+rp <- 2
+M3 <- pivot_matrix(M2, c(2,2));M3
+```
+
+In this case we can construct 13 of 2nd and 3rd type while using all weeks and storage capacity to achieve a profit of `r format(13 * 4000 + 13 * 6000, scientifuc = F)`.
+We conclude that economically this is the best option.
