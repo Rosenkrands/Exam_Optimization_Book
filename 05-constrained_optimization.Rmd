@@ -149,3 +149,39 @@ M3 <- pivot_matrix(M2, c(2,2));M3
 
 In this case we can construct 13 of 2nd and 3rd type while using all weeks and storage capacity to achieve a profit of `r format(13 * 4000 + 13 * 6000, scientifuc = F)`.
 We conclude that economically this is the best option.
+
+## Task 2
+What should the ratio between diameter and height of a cylinder, with a volume of 1 liter, be to use the smallest amount of material.
+Solve the exercise using Lagrange multiplier technique.
+
+The exercise can be rephrased to a optimization problem of the form: Minimize the objective function
+\begin{align}
+    A(r,h) = 2 \pi r(h + r)
+\end{align}
+subject to
+\begin{align}
+    V(r,h) = \pi r^2 h = 1. 
+\end{align}
+The lagrangian becomes
+\begin{align}
+    \mathcal{L}(r,h,\lambda) = 2 \pi r (h+r) - \lambda(\pi r^2 h - 1).
+\end{align}
+We then find the partial derivatives
+\begin{align}
+    \mathcal{L}'_{\lambda} &= - (\pi r^2 h - 1)\\
+    \mathcal{L}'_r &= 2 \pi h + 4 \pi r - 2 \lambda \pi r h\\
+    \mathcal{L}'_h &= 2 \pi r - \lambda \pi r^2
+\end{align}
+Setting the gradient equal to 0 gives the a system of 3 equations with 3 unknowns
+\begin{align}
+    \nabla \mathcal{L} = \begin{bmatrix}- (\pi r^2 h - 1)\\ 2 \pi h + 4 \pi r - 2 \lambda \pi r h\\ 2 \pi r - \lambda \pi r^2 \end{bmatrix}
+    = \textbf{0}
+\end{align}
+The solution is
+\begin{align}
+    h  &\approx 1.0839 \\
+    r  &\approx 0.5419 \\
+    \lambda &\approx -3.6904.
+\end{align}
+
+##
