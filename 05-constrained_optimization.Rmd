@@ -184,4 +184,37 @@ The solution is
     \lambda &\approx -3.6904.
 \end{align}
 
-##
+## Task 3
+Suppose the following situation: We have $n$ independent stochastic variables $y_1,\ldots,y_n$ where $y_i \sim N(\mu,\sigma^2v_i^2)$, and all $v_i$’s are known and $\sigma^2$ is unknown.
+
+### Part 1
+We wish to estimate $\mu$.
+Let $\overline{y} = \dfrac{1}{n} \sum_i y_i$.
+What is $E[\overline{y}]$ and $V[\overline{y}]$? Can we find a better estimate for $\mu$ than a simple average.
+
+Let $\Bar{y}=\frac{1}{n}\sum_i y_i$.
+We want to estimate the mean and variance.
+We leave out $\sigma^2$ as this is an unknown constant.
+\begin{align*}
+    E(\Bar{y}) &= E(\frac{1}{n}\sum_i y_i) = \frac{1}{n}E(\sum_i y_i) = \frac{1}{n}n \mu = \mu \\
+    V(\Bar{y}) &= \frac{1}{n^2} V(\sum_i y_i) = \frac{1}{n^2} \sum_i V(y_i) = \frac{1}{n^2} \sum_i v_i^2.
+\end{align*}
+One would be able to come up with a better estimate by weighting the data points with lowest variance higher, but still consider all $y_i$'s, as they still hold information about the true mean value.
+
+### Part 2
+Let $\tilde{y} = \sum_i p_i y_i$ where $p= (p_1,...,p_n)$ be a deterministic vector.
+what value of $\textbf{p}$ gives $\tilde{y}$ the lowest possible variance?
+What restriction should we put on $p_1,\ldots p_n$ if we want $E(\tilde{y})=\mu$?
+
+First we calculate the variance
+\begin{align*}
+    V(\tilde{y}) = V(\sum_i p_i y_i) = \sum_i p_i^2 V(y_i) = \sum_i p_i^2 v_i^2
+\end{align*}
+The value for which we get the lowest variance is 0, however this is a trivial case that gets us no closer to the true mean.
+Next we find the mean
+\begin{align*}
+    E(\tilde{y}) = E(\sum_i p_i y_i) = \sum_i p_i E(y_i) = \mu \sum_i p_i \Rightarrow \sum_i p_i = 1
+\end{align*}
+This tells us that the weights must sum to one.
+
+## Task 3
