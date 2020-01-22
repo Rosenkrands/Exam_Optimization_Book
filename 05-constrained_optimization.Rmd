@@ -67,8 +67,8 @@ Inserting in the profitfunction yields
 The owner is looking to increase the profit and is considering various options.
 \begin{itemize}
   \item Keeping the boatyard open all year round
-  \item Increasing the capacity to 25 boasts
-  \item Keeping the boatyard open all year round and icreasing the capacity to 26 boats
+  \item Increasing the capacity to 26 boasts
+  \item Keeping the boatyard open all year round and increasing the capacity to 26 boats
 \end{itemize}
 
 #### 52 weeks and 25 boats

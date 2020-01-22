@@ -33,7 +33,7 @@ Knowing this we can deduce that
 \end{align}
 This means that $x^*$ satisfies the linear system of equations
 \begin{align}\label{eq:normal_equations}
-  J^\top Jx^* - J^\top y,
+  J^\top Jx^* = J^\top y,
 \end{align}
 which are also known as the normal equations.
 So to solve this unconstrained linear least squares problem, is equivalent to solving the set of normal equations given by \eqref{eq:normal_equations}.
@@ -234,7 +234,11 @@ We suspect that the discrepancy can be explained by our implementation doing som
 In the case of a non-linear objective function one might utilize the Gauss-Newton method to find a solution.
 However in the case of NLS the objective function is not convex, and it can therefore be difficult to find a solution.
 The Gauss-Newton method can be viewed as a modified Newton's method with line search.
-It solves the following system to find the search direction $p_k^{GN}$:
+Recall that the search direction for Newton's method is the solution to the following system
+\begin{align}
+  \nabla^2f_kp^{N}_k = - \nabla f_k.
+\end{align}
+The Gauss-Newton method solves the following system to find the search direction $p_k^{GN}$:
 \begin{align*}
   J_k^\top J_k p_k^{GN} = -J_k^\top r_k.
 \end{align*}

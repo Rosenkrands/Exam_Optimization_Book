@@ -76,7 +76,7 @@ The updated approximation must be symmetric and positive definite, and must sati
 The condition of closeness to $H_k$ is now specified by the follwoing analogue of \eqref{eq:DFP_problem}
 \begin{align}
   &\underset{H}{\min}\|H - H_k\|, \\
-  &\text{subject to} \quad H = H^\top, \quad H_{s_k} = y_k.
+  &\text{subject to} \quad H = H^\top, \quad H_{y_k} = s_k.
 \end{align}
 A norm that allows easy solution of the minimization problem is the weighted Frobenius norm
 \begin{align}
@@ -264,7 +264,7 @@ For 3 of the entries the difference even shrinks after the 4 iterations.
 ## Nelder-Mead
 A popular derivative free optimization method is the Nelder-Mead method.
 At any given point it keeps track of $n + 1$ points of interest in $\mathbb{R}^n$.
-In a single iteration of the Nelder-Mead algorithm we seek to remove the matrix with the worst function value and replace it with another point with a better value.
+In a single iteration of the Nelder-Mead algorithm we seek to remove the point with the worst function value and replace it with another point with a better value.
 The new point is found be either reflecting, expanding or contracting the simplex along the line joining the worst vertex with the centroid of the remaining vertices.
 If we cannot find a better point in this manner, we retain only the vertex with the best function value, and we shrink the simplex by moving all other vertices toward this value.
 

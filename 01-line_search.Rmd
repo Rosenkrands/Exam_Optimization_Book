@@ -1,5 +1,5 @@
 # Line search
-A line serach algorithm chooses a direction $p_k$ and searches along this direction from the current iterate $x_k$ for a new iterate with a lower function value.
+A line search algorithm chooses a direction $p_k$ and searches along this direction from the current iterate $x_k$ for a new iterate with a lower function value.
 
 ## Search direction
 The first step is to find a search direction, the most obvious one being $-\nabla f_k$.
@@ -33,7 +33,7 @@ g <- function(x) {
 Next we start to implement a basic gradient descent algorithm.
 
 ```{r}
-# Usign the norm as a criteria for convergence
+# Using the norm as a criteria for convergence
 norm2 <- function(x) norm(as.matrix(x), type = "2")
 
 basic_gd <- function(output = FALSE, x_0 = c(-19,3.6), alpha = 1e-4, tolerance = 1e-4,
@@ -75,7 +75,7 @@ However it is not practical to calculate this every time as it would require to 
 We can however use some conditions to determine desireable step size at minimal cost.
 
 **Sufficient decrease**:
-This condition ensure that the step insures a sufficient decrease in the objective function and can be formulated as
+This condition make the step ensure a sufficient decrease in the objective function and can be formulated as
 \begin{align}
   f(x_k + \alpha p_k) \leq f(x_k) + c_1 \alpha \nabla f_k^T p_k, \quad c_1 \in (0, 1).
 \end{align}
@@ -91,7 +91,7 @@ The condition is formulated as follows
 These two conditions are known collectively as the *Wolfe conditions*, and if we furthermore pose a restriction on how positive the gradient can be we have what are called the *strong Wolfe conditions*
 \begin{align}
   f(x_k + \alpha p_k) &\leq f(x_k) + c_1 \alpha \nabla f_k^T p_k, \quad &&c_1 \in (0, 1) \\
-  |\nabla f(x_k + \alpha p_k)^T p_k| &\geq c_2 |\nabla f_k^T p_k|, \quad &&c_2 \in (c_1, 1).
+  |\nabla f(x_k + \alpha p_k)^T p_k| &\leq c_2 |\nabla f_k^T p_k|, \quad &&c_2 \in (c_1, 1).
 \end{align}
 
 ### A strong Wolfe gradient descent algorithm
@@ -172,7 +172,7 @@ zoom <- function(a_lo, a_hi, x_k, c1, c2) {
 }
 ```
 
-We can then create a function that uses the line search and zoom algortihm to actually minimize the objective function.
+We can then create a function that uses the line search and zoom algorithm to actually minimize the objective function.
 
 ```{r}
 strong_wolfe_gd <-
