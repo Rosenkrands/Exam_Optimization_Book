@@ -33,10 +33,7 @@ rearranging gives that
 By considering only the first term after the equality we give rise to a truncation error.
 We are only interested in $0 < h < 1$, such that the truncation error becomes $O(h)$.
 Furthermore the truncation error decreases as $h$ decreases.
-The could lead us to believe that we can then choose a very small $h$ a go on our merry way.
-However this is not the case due to floating point arithmetic producing a round-off error.
-It can be shown that the round-off error bound is $O(\varepsilon_M/h)$, i.e. the round-off error increases as $h$ decreases.
-Thus we have established that there is a trade-off between truncation and round-off error.
+
 
 ### Central difference
 Consider now both forward and backward difference, giving by
@@ -73,9 +70,9 @@ legend('topright', legend = c('cos(x)', 'FD', 'CD'),
        lty = 1, cex = 0.8)
 ```
 
-It is clear to see that the CD is closer to the actual gradient than the FD is.
+It is clear to see that CD is closer to the actual gradient than FD is.
 
-## Five-Point stencil
+### Five-Point stencil
 Going further than the central difference formula, one could also include the terms $f(x + 2h)$ and $f(x - 2h)$ to cancel out even more terms.
 Recalliung the taylor expansion of $f$ gives
 $$f(x \pm h) = f(x) \pm h f'(x) + \frac{h^2}{2!} f''(x) \pm \frac{h^3}{3!} f'''(x) + O(h^4)$$
@@ -88,39 +85,81 @@ $$f'(x) = \frac{8 f(x+h) - 8f(x-h) - f(x+2h) + f(x-2h)}{12h}$$
 where our truncation error is $O(h^4)$, which all else equal is better than for both forward and central differencing.
 These are $O(h)$ and $O(h^2)$ respectively.
 
-The performance for the three different methods can be seen in the plot below.
+<!-- The performance for the three different methods can be seen in the plot below. -->
 
-```{r comparing_the_three_methods, echo=F, fig.height=4, fig.width=8}
-h <- 0.1
-f <- function(x) {sin(x)}
-g_exact <- function(x) {cos(x)}
-FD <- function(x) {
+<!-- ```{r comparing_the_three_methods, echo=F, fig.height=4, fig.width=8} -->
+<!-- h <- 0.1 -->
+<!-- f <- function(x) {sin(x)} -->
+<!-- g_exact <- function(x) {cos(x)} -->
+<!-- FD <- function(x) { -->
+<!--   FDf <- (f(x + h) - f(x))/h     -->
+<!--   return(FDf) -->
+<!-- } -->
+<!-- CD <- function(x) { -->
+<!--   CDf <- (f(x + h) - f(x - h))/(2*h) -->
+<!--   return(CDf) -->
+<!-- } -->
+<!-- XCD <- function(x) { -->
+<!--   XCDf <- (8*f(x + h) - 8*f(x - h) - f(x + 2*h) + f(x - 2*h))/(12*h) -->
+<!--   return(XCDf) -->
+<!-- } -->
+
+<!-- int <- seq(-.5,.5, 0.001) -->
+
+<!-- diff_XCD <- function(x) g_exact(x) - XCD(x) -->
+<!-- diff_CD <- function(x) g_exact(x) - CD(x) -->
+<!-- diff_FD <- function(x) g_exact(x) - FD(x) -->
+<!-- curve(diff_FD, min(int), max(int), ylab = "Difference", xlab = "") -->
+<!-- lines(int, diff_CD(int), col = 'blue') -->
+<!-- lines(int, diff_XCD(int), col = 'green') -->
+<!-- legend("topleft", legend = c("FD", "CD", "Five-Point"), -->
+<!--        col = c("black", "blue", "green"), -->
+<!--        lty = 1, cex = 0.8) -->
+<!-- ``` -->
+
+## Error tradeoff
+As we are using computers to aid us in calculating the finite differencing estimates we run into the problem of round off errors.
+The roundoff error bound is given by
+\begin{align*}
+  O(\epsilon_M/h).
+\end{align*}
+This means that the roundoff error increases when $h$ decreases.
+Thus we have established that there is a trade-off between truncation and round-off error.
+In the following plot we can see the relationship between $h$ and the difference between the exact gradient and the estimate produced from the three methods.
+The function in question is
+\begin{align*}
+  f(x) = \cos(\cos(x)\sin(x)),
+\end{align*}
+evaluated at $x = \frac{\pi}{3}$.
+
+```{r echo=F, fig.height=4, fig.width=8}
+x <- pi/3
+h <- c(1e-01,1e-02,1e-03,1e-04,1e-05,1e-06,1e-07,1e-08,
+       1e-09,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16)
+f <- function(x) {cos(cos(x)*sin(x))}
+g_exact <- function(x) {-sin(cos(x)*sin(x))*(-(sin(x)^2)+(cos(x)^2))}
+FD <- function(x, h) {
   FDf <- (f(x + h) - f(x))/h    
   return(FDf)
 }
-CD <- function(x) {
+CD <- function(x, h) {
   CDf <- (f(x + h) - f(x - h))/(2*h)
   return(CDf)
 }
-XCD <- function(x) {
+XCD <- function(x, h) {
   XCDf <- (8*f(x + h) - 8*f(x - h) - f(x + 2*h) + f(x - 2*h))/(12*h)
   return(XCDf)
 }
-
-int <- seq(-.5,.5, 0.001)
-
-diff_XCD <- function(x) g_exact(x) - XCD(x)
-diff_CD <- function(x) g_exact(x) - CD(x)
-diff_FD <- function(x) g_exact(x) - FD(x)
-curve(diff_FD, min(int), max(int), ylab = "Difference", xlab = "")
-lines(int, diff_CD(int), col = 'blue')
-lines(int, diff_XCD(int), col = 'green')
-legend("topleft", legend = c("FD", "CD", "Five-Point"),
-       col = c("black", "blue", "green"),
+plot(log10(h), log10(abs(XCD(x, h) - g_exact(x))), type = 'l', col = 'red', ylab = 'log10(Error)', xaxt = 'n')
+axis(side = 1, at=seq(-16,0,2))
+lines(log10(h), log10(abs(FD(x, h) - g_exact(x))), col = 'blue')
+lines(log10(h), log10(abs(CD(x, h) - g_exact(x))), col = 'green')
+legend("bottomleft", legend = c("FD", "CD", "Five-Point"),
+       col = c("green", "blue", "red"),
        lty = 1, cex = 0.8)
 ```
 
-## Finite difference gradient descent algortihm
+## Finite difference gradient descent algorithm
 We have implemented four different algortihms that utilizes the exact gradient, forward differencing, central difference and the five point stencil respectively.
 
 ```{r gradient_descent_algorithms, include=F}
@@ -502,15 +541,14 @@ library(dplyr)
 bench <- bench %>%
   group_by(expr) %>%
   summarise(mean_time = mean(time)/1e+6)
+library(ggplot2)
 ```
 
 The following graph show how the different algorithms performed, on average, across 10 runs.
 
 ```{r plotting_the_results, echo = F, fig.height=3, fig.width=8}
-library(ggplot2)
 ggplot(bench) + 
   geom_col(aes(x = expr, y = mean_time), width = 0.5, fill = 'darkblue') +
-  scale_y_continuous(breaks = seq(0,650,50)) +
   xlab('') + ylab('Mean time') + ggtitle('Comparing test results') +
   theme_minimal()
 ```
